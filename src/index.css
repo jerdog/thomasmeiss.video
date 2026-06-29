@@ -7,7 +7,7 @@
   --color-ember: oklch(0.72 0.17 48);
   --color-ember-light: oklch(0.82 0.13 55);
   --color-border: oklch(1 0 0 / 0.24);
-  --font-display: "Bodoni Moda", Georgia, serif;
+  --font-display: "EB Garamond", serif;
   --font-body: "Manrope", system-ui, sans-serif;
 }
 
