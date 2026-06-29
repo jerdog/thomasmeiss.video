@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { services } from "../data/content";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
-import { SectionLabel } from "./ui/SectionLabel";
+import { SectionHeading } from "./ui/SectionHeading";
 
 const PANEL_ID = "services-panel";
 
@@ -19,10 +19,11 @@ export function Services() {
     <section id="services" className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[280px_1fr] lg:gap-20">
         <div className="lg:sticky lg:top-28 lg:self-start">
-          <SectionLabel>Services</SectionLabel>
-          <h2 className="font-display text-4xl leading-tight text-bone lg:text-5xl">
-            What I bring to your project
-          </h2>
+          <SectionHeading
+            title="Services"
+            subtitle="What I bring to your project"
+            className="mb-0"
+          />
           <ul className="mt-10 space-y-2" role="tablist" aria-label="Services">
             {services.map((service, i) => (
               <li key={service.num} role="presentation">

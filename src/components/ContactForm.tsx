@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { projectTypes } from "../data/content";
 import { PillButton } from "./ui/PillButton";
-import { SectionLabel } from "./ui/SectionLabel";
+import { SectionHeading } from "./ui/SectionHeading";
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -41,8 +41,11 @@ export function ContactForm() {
   return (
     <section id="contact" className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto max-w-2xl">
-        <SectionLabel>Contact</SectionLabel>
-        <h2 className="font-display text-4xl text-bone lg:text-5xl">Start a conversation</h2>
+        <SectionHeading
+          title="Contact"
+          subtitle="Start a conversation"
+          className="mb-0"
+        />
         <p className="mt-4 font-body text-bone-muted">
           Tell me about your project — I'll reply within two business days.
         </p>

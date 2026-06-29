@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { stats } from "../data/content";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
-import { SectionLabel } from "./ui/SectionLabel";
+import { SectionHeading } from "./ui/SectionHeading";
 
 export function About() {
   const reduced = usePrefersReducedMotion();
@@ -15,10 +15,11 @@ export function About() {
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
-          <SectionLabel>About</SectionLabel>
-          <h2 className="font-display text-4xl leading-tight text-bone lg:text-5xl">
-            Twelve years behind the lens
-          </h2>
+          <SectionHeading
+            title="About"
+            subtitle="Twelve years behind the lens"
+            className="mb-0"
+          />
           <p className="mt-6 font-body text-lg leading-relaxed text-bone-muted">
             I'm Thomas Meiss — a freelance producer and filmmaker based in the Midwest,
             working with agencies, artists, and couples who care about craft. Whether it's

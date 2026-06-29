@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import { pricingTiers } from "../data/content";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 import { PillButton } from "./ui/PillButton";
-import { SectionLabel } from "./ui/SectionLabel";
+import { SectionHeading } from "./ui/SectionHeading";
 
 export function Pricing() {
   const reduced = usePrefersReducedMotion();
@@ -10,10 +10,11 @@ export function Pricing() {
   return (
     <section id="pricing" className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto max-w-7xl">
-        <SectionLabel>Pricing</SectionLabel>
-        <h2 className="mb-12 max-w-xl font-display text-4xl text-bone lg:text-5xl">
-          Transparent packages, room to grow
-        </h2>
+        <SectionHeading
+          title="Pricing"
+          subtitle="Transparent packages, room to grow"
+          className="mb-12"
+        />
         <div className="grid gap-4 lg:grid-cols-3">
           {pricingTiers.map((tier, i) => (
             <motion.article

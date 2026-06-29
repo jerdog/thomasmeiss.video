@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import { channels } from "../data/content";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 import { AnimatedLink } from "./ui/AnimatedLink";
-import { SectionLabel } from "./ui/SectionLabel";
+import { SectionHeading } from "./ui/SectionHeading";
 
 export function Channels() {
   const reduced = usePrefersReducedMotion();
@@ -10,10 +10,7 @@ export function Channels() {
   return (
     <section id="channels" className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto max-w-7xl">
-        <SectionLabel>Channels</SectionLabel>
-        <h2 className="mb-8 font-display text-4xl leading-tight tracking-tight text-bone lg:text-5xl">
-          Watch more work
-        </h2>
+        <SectionHeading title="Channels" subtitle="Watch more work" />
         <div className="grid gap-4 md:grid-cols-2">
           {channels.map((channel, i) => (
             <motion.div
