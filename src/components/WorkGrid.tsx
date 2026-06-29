@@ -1,7 +1,6 @@
 import { motion } from "motion/react";
 import { projects } from "../data/content";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
-import { SectionLabel } from "./ui/SectionLabel";
 
 const spanClass: Record<string, string> = {
   documentary: "md:col-span-4 md:row-span-1",
@@ -21,7 +20,9 @@ export function WorkGrid() {
   return (
     <section id="work" className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto max-w-7xl">
-        <SectionLabel>Selected Work</SectionLabel>
+        <h2 className="mb-8 font-display text-4xl leading-tight tracking-tight text-bone lg:text-5xl">
+          Selected Work
+        </h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-6 md:auto-rows-[minmax(180px,auto)]">
           {projects.map((project, i) => (
             <motion.a

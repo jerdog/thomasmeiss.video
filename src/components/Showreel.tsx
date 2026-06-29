@@ -1,6 +1,5 @@
 import { motion } from "motion/react";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
-import { SectionLabel } from "./ui/SectionLabel";
 
 export function Showreel() {
   const reduced = usePrefersReducedMotion();
@@ -8,7 +7,9 @@ export function Showreel() {
   return (
     <section id="showreel" className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto max-w-7xl">
-        <SectionLabel>Showreel</SectionLabel>
+        <h2 className="mb-8 font-display text-4xl leading-tight tracking-tight text-bone lg:text-5xl">
+          Showreel
+        </h2>
         <motion.div
           initial={reduced ? false : { opacity: 0, y: 32 }}
           whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
