@@ -44,7 +44,7 @@ export function Nav() {
         <div className="flex items-center justify-between gap-4">
           <a
             href="#main"
-            className="font-display text-lg tracking-tight text-bone transition-colors hover:text-ember-light"
+            className="font-display text-2xl tracking-tight text-bone transition-colors hover:text-ember-light"
           >
             {site.name}
           </a>
@@ -54,7 +54,7 @@ export function Nav() {
               <li key={link.href}>
                 <a
                   href={link.href}
-                  className="link-underline inline-flex min-h-11 items-center font-body text-sm text-bone-muted transition-colors hover:text-bone"
+                  className="link-underline inline-flex min-h-11 items-center font-display text-2xl text-bone-muted transition-colors hover:text-bone"
                 >
                   {link.label}
                 </a>
