@@ -38,13 +38,13 @@ export function Nav() {
       }`}
     >
       <nav
-        className="mx-auto max-w-7xl px-6 py-4 lg:px-10"
+        className="mx-auto max-w-7xl py-4 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:pl-[max(1.5rem,env(safe-area-inset-left))] sm:pr-[max(1.5rem,env(safe-area-inset-right))] lg:pl-[max(2.5rem,env(safe-area-inset-left))] lg:pr-[max(2.5rem,env(safe-area-inset-right))]"
         aria-label="Main"
       >
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-4">
           <a
             href="#main"
-            className="font-display text-2xl tracking-tight text-bone transition-colors hover:text-ember-light"
+            className="min-w-0 shrink font-display text-lg leading-tight tracking-tight text-bone transition-colors hover:text-ember-light sm:text-xl md:text-2xl"
           >
             {site.name}
           </a>
@@ -62,10 +62,10 @@ export function Nav() {
             ))}
           </ul>
 
-          <div className="flex items-center gap-3">
-            <PillButton href="#contact" className="hidden text-xs sm:inline-flex md:text-sm">
-              Start a project
-            </PillButton>
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            <div className="hidden md:block">
+              <PillButton href="#contact">Start a project</PillButton>
+            </div>
 
             <button
               type="button"

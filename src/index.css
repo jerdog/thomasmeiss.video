@@ -14,10 +14,12 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   body {
     @apply bg-ground text-bone font-body antialiased;
+    overflow-x: hidden;
   }
 
   section[id],

@@ -4,8 +4,8 @@ export function TrustMarquee() {
   const items = [...trustClients, ...trustClients];
 
   return (
-    <div className="overflow-hidden border-y border-border py-5" aria-hidden="true">
-      <div className="animate-marquee flex w-max gap-12 whitespace-nowrap motion-reduce:transform-none">
+    <div className="overflow-x-clip border-y border-border py-5" aria-hidden="true">
+      <div className="animate-marquee flex w-max max-w-none gap-12 whitespace-nowrap motion-reduce:transform-none">
         {items.map((client, i) => (
           <span
             key={`${client}-${i}`}
