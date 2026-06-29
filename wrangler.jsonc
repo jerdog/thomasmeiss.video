@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "thomasmeiss-video",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "keep_vars": true,
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "allowed_destination_addresses": ["contact@thomasmeiss.video"],
+      // Set remote: true after wrangler login to send real emails in dev
+    }
+  ],
+  // "vars": {
+  //   "CONTACT_FROM": "hello@thomasmeiss.video",
+  //   "CONTACT_FROM_NAME": "Thomas Meiss Video",
+  //   "CONTACT_TO": "CONTACT_TO@example.com"
+  // },
+    "observability": {
+      "enabled": false,
+      "head_sampling_rate": 1,
+      "logs": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "persist": true,
+        "invocation_logs": true
+      },
+      "traces": {
+        "enabled": true,
+        "persist": true,
+        "head_sampling_rate": 1
+      }
+    }
+}

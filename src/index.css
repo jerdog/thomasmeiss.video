@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ground: #0a0a0b;
+  --color-bone: #f4f1ea;
+  --color-bone-muted: oklch(0.94 0.01 85 / 0.65);
+  --color-ember: oklch(0.72 0.17 48);
+  --color-ember-light: oklch(0.82 0.13 55);
+  --color-border: oklch(1 0 0 / 0.08);
+  --font-display: "Bodoni Moda", Georgia, serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-ground text-bone font-body antialiased;
+  }
+
+  ::selection {
+    @apply bg-ember/30 text-bone;
+  }
+}
+
+@layer utilities {
+  .texture-diagonal {
+    background-image: repeating-linear-gradient(
+      135deg,
+      oklch(1 0 0 / 0.03) 0,
+      oklch(1 0 0 / 0.03) 1px,
+      transparent 1px,
+      transparent 12px
+    );
+  }
+
+  .glow-ember {
+    position: relative;
+  }
+
+  .glow-ember::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background: radial-gradient(ellipse at center, oklch(0.72 0.17 48 / 0.12), transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .hairline {
+    border-color: var(--color-border);
+  }
+
+  .link-underline {
+    position: relative;
+    text-decoration: none;
+  }
+
+  .link-underline::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    width: 0;
+    height: 1px;
+    background: var(--color-ember);
+    transition: width 0.3s ease;
+  }
+
+  .link-underline:hover::after {
+    width: 100%;
+  }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 28s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .animate-marquee { animation: none; }
+}
