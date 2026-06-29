@@ -30,19 +30,23 @@ export function WorkGrid() {
               href={project.href}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label={`${project.title} (opens on ${project.platform} in new tab)`}
               initial={reduced ? false : { opacity: 0, y: 24 }}
               whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }}
               whileHover={reduced ? undefined : { scale: 1.02 }}
-              className={`group relative overflow-hidden rounded-sm border border-border texture-diagonal bg-ground transition-colors duration-300 hover:border-ember/40 hover:shadow-[0_0_48px_oklch(0.72_0.17_48_/_0.08)] ${spanClass[project.id]} ${aspectClass[project.aspect]} flex flex-col justify-end p-5`}
+              className={`group relative overflow-hidden rounded-sm border border-border texture-diagonal bg-ground transition-colors duration-300 hover:border-ember/40 hover:shadow-[0_0_48px_oklch(0.72_0.17_48_/_0.08)] focus-visible:border-ember/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember ${spanClass[project.id]} ${aspectClass[project.aspect]} flex flex-col justify-end p-5`}
             >
               <span className="mb-3 inline-flex w-fit rounded-full border border-border px-3 py-1 font-body text-[10px] uppercase tracking-[0.15em] text-ember">
                 {project.category}
               </span>
               <div className="flex items-end justify-between gap-4">
                 <h3 className="font-display text-2xl text-bone">{project.title}</h3>
-                <span className="translate-x-2 font-body text-sm text-bone-muted opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100">
+                <span
+                  className="translate-x-2 font-body text-sm text-bone-muted opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
+                  aria-hidden="true"
+                >
                   {project.platform} →
                 </span>
               </div>

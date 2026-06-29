@@ -11,6 +11,9 @@ export function Channels() {
     <section id="channels" className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto max-w-7xl">
         <SectionLabel>Channels</SectionLabel>
+        <h2 className="mb-8 font-display text-4xl leading-tight tracking-tight text-bone lg:text-5xl">
+          Watch more work
+        </h2>
         <div className="grid gap-4 md:grid-cols-2">
           {channels.map((channel, i) => (
             <motion.div
@@ -37,6 +40,7 @@ export function Channels() {
                 href={channel.href}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label={`Open ${channel.name} channel (opens in new tab)`}
                 className="mt-8 inline-block text-sm"
               >
                 Open channel →

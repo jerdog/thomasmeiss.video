@@ -4,9 +4,16 @@ import { services } from "../data/content";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 import { SectionLabel } from "./ui/SectionLabel";
 
+const PANEL_ID = "services-panel";
+
+function tabId(index: number) {
+  return `service-tab-${index}`;
+}
+
 export function Services() {
   const [active, setActive] = useState(0);
   const reduced = usePrefersReducedMotion();
+  const activeService = services[active];
 
   return (
     <section id="services" className="px-6 py-24 lg:px-10 lg:py-32">
@@ -18,11 +25,14 @@ export function Services() {
           </h2>
           <ul className="mt-10 space-y-2" role="tablist" aria-label="Services">
             {services.map((service, i) => (
-              <li key={service.num}>
+              <li key={service.num} role="presentation">
                 <button
                   type="button"
+                  id={tabId(i)}
                   role="tab"
                   aria-selected={active === i}
+                  aria-controls={PANEL_ID}
+                  tabIndex={active === i ? 0 : -1}
                   onMouseEnter={() => setActive(i)}
                   onFocus={() => setActive(i)}
                   onClick={() => setActive(i)}
@@ -35,7 +45,7 @@ export function Services() {
                   <span
                     className={`translate-x-0 transition-transform duration-300 ${
                       active === i ? "translate-x-1 opacity-100" : "-translate-x-2 opacity-0"
-                    } group-hover:translate-x-1 group-hover:opacity-100`}
+                    } group-hover:translate-x-1 group-hover:opacity-100 group-focus-visible:translate-x-1 group-focus-visible:opacity-100`}
                     aria-hidden="true"
                   >
                     →
@@ -45,7 +55,13 @@ export function Services() {
             ))}
           </ul>
         </div>
-        <div className="flex min-h-[280px] items-center border border-border p-8 lg:p-12">
+        <div
+          id={PANEL_ID}
+          role="tabpanel"
+          aria-labelledby={tabId(active)}
+          tabIndex={0}
+          className="flex min-h-[280px] items-center border border-border p-8 lg:p-12"
+        >
           <motion.div
             key={active}
             initial={reduced ? false : { opacity: 0, x: 16 }}
@@ -53,10 +69,10 @@ export function Services() {
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
             <p className="mb-2 font-body text-xs uppercase tracking-[0.2em] text-ember">
-              {services[active].num} — {services[active].title}
+              {activeService.num} — {activeService.title}
             </p>
             <p className="max-w-lg font-body text-lg leading-relaxed text-bone-muted">
-              {services[active].description}
+              {activeService.description}
             </p>
           </motion.div>
         </div>

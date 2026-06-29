@@ -6,7 +6,7 @@
   --color-bone-muted: oklch(0.94 0.01 85 / 0.65);
   --color-ember: oklch(0.72 0.17 48);
   --color-ember-light: oklch(0.82 0.13 55);
-  --color-border: oklch(1 0 0 / 0.08);
+  --color-border: oklch(1 0 0 / 0.24);
   --font-display: "Bodoni Moda", Georgia, serif;
   --font-body: "Manrope", system-ui, sans-serif;
 }
@@ -18,6 +18,15 @@
 
   body {
     @apply bg-ground text-bone font-body antialiased;
+  }
+
+  section[id],
+  :target {
+    scroll-margin-top: 5.5rem;
+  }
+
+  :focus-visible {
+    scroll-margin-top: 5.5rem;
   }
 
   ::selection {
@@ -69,8 +78,19 @@
     transition: width 0.3s ease;
   }
 
-  .link-underline:hover::after {
+  .link-underline:hover::after,
+  .link-underline:focus-visible::after {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
