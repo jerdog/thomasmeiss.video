@@ -19,6 +19,7 @@
     "@cloudflare/vite-plugin": "^1.21.2",
     "@cloudflare/workers-types": "^4.20260629.1",
     "@tailwindcss/vite": "^4.1.11",
+    "@types/node": "^26.0.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "@vitejs/plugin-react": "^5.0.4",
