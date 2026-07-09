@@ -29,17 +29,17 @@ export function Hero() {
           className="max-w-4xl font-display text-[clamp(2.75rem,8vw,5.5rem)] leading-[1.05] tracking-tight text-bone"
         >
           Stories worth{" "}
-          <em className="text-accent-light not-italic">framing</em> — documentary,
-          wedding, and commercial film.
+          <em className="text-accent-light not-italic">telling</em> — from the first
+          frame to the final cut.
         </motion.h1>
         <motion.p
           {...motionProps}
           transition={{ duration: 0.7, delay: 0.2 }}
           className="mt-8 max-w-xl font-body text-lg leading-relaxed text-bone-muted"
         >
-          Thomas Meiss produces cinematic video for ad agencies, recording artists,
-          startups, and couples. From first treatment to final grade — one producer,
-          full craft.
+          Thomas Meiss is a video producer and editor who shapes story at every stage —
+          framing it behind the camera and finding it in the edit. Sports, brand, and
+          documentary work, delivered with energy and craft.
         </motion.p>
         <motion.div
           {...motionProps}
@@ -47,8 +47,8 @@ export function Hero() {
           className="mt-10 flex flex-wrap gap-4"
         >
           <PillButton href="#showreel">View showreel</PillButton>
-          <PillButton href="#pricing" variant="ghost">
-            See pricing
+          <PillButton href="#work" variant="ghost">
+            See work
           </PillButton>
         </motion.div>
       </div>

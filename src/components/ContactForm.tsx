@@ -104,7 +104,8 @@ export function ContactForm() {
           className="mb-0"
         />
         <p className="mt-4 font-body text-bone-muted">
-          Tell me about your project — I'll reply within two business days.
+          Have a project, game, or opportunity in mind? Tell me about it — I'll reply
+          within two business days.
         </p>
 
         {status === "success" ? (

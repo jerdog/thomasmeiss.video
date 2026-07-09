@@ -12,7 +12,7 @@ export function Pricing() {
       <div className="mx-auto max-w-7xl">
         <SectionHeading
           title="Pricing"
-          subtitle="Transparent packages, room to grow"
+          subtitle="Packages for teams, athletes & brands"
           className="mb-12"
         />
         <div className="grid gap-4 lg:grid-cols-3">

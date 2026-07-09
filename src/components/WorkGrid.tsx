@@ -5,10 +5,10 @@ import { SectionHeading } from "./ui/SectionHeading";
 import { VimeoFacade } from "./ui/VimeoFacade";
 
 const spanClass: Record<string, string> = {
-  documentary: "md:col-span-4 md:row-span-1",
-  wedding: "md:col-span-2 md:row-span-2",
-  commercial: "md:col-span-2 md:row-span-2",
-  aerial: "md:col-span-4 md:row-span-1",
+  basketball: "md:col-span-4 md:row-span-1",
+  football: "md:col-span-2 md:row-span-2",
+  olympic: "md:col-span-2 md:row-span-2",
+  hype: "md:col-span-4 md:row-span-1",
 };
 
 const aspectClass: Record<string, string> = {

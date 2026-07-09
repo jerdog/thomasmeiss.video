@@ -17,41 +17,42 @@ export const showreel = {
 } as const;
 
 export const trustClients = [
-  "Ad agencies",
-  "Recording artists",
-  "Startups",
-  "Couples",
-  "Brands",
+  "Big 12 Basketball",
+  "Football",
+  "Softball",
+  "Tennis",
+  "Rowing",
+  "Volleyball",
 ] as const;
 
 // Selected Work — 4 Vimeo reels shown as inline click-to-play facades.
 // Drop each real Vimeo ID into vimeoId (one line each); null shows "Coming soon".
 export const projects = [
   {
-    id: "documentary",
-    title: "Voices of the Valley",
-    category: "Documentary",
+    id: "basketball",
+    title: "Allen Fieldhouse Nights",
+    category: "Basketball",
     aspect: "wide" as const,
     vimeoId: null as string | null,
   },
   {
-    id: "wedding",
-    title: "Amelia & James",
-    category: "Wedding",
+    id: "football",
+    title: "Gameday: Kansas Football",
+    category: "Football",
     aspect: "tall" as const,
     vimeoId: null as string | null,
   },
   {
-    id: "commercial",
-    title: "Launch Sequence",
-    category: "Commercial",
+    id: "olympic",
+    title: "Rowing at Dawn",
+    category: "Olympic Sports",
     aspect: "tall" as const,
     vimeoId: null as string | null,
   },
   {
-    id: "aerial",
-    title: "Skyline Sessions",
-    category: "Aerial",
+    id: "hype",
+    title: "Season Hype Reel",
+    category: "Hype Reel",
     aspect: "wide" as const,
     vimeoId: null as string | null,
   },
@@ -62,83 +63,84 @@ export const services = [
     num: "01",
     title: "Production",
     description:
-      "End-to-end project leadership — creative development, scheduling, crew coordination, and on-set direction from first call to final delivery.",
+      "End-to-end production for game-day and feature content — shot planning, multi-camera capture, and fast-turnaround delivery under tight deadlines.",
   },
   {
     num: "02",
-    title: "Video / Camera",
+    title: "Cinematography",
     description:
-      "Cinematic capture on cinema cameras and stabilized rigs. Documentary observational work, polished interviews, and event coverage.",
+      "Cinematic capture on Sony Cinema Line cameras (FX6, FS7, a7S III), with lighting and multi-angle coverage for live sports, interviews, and features.",
   },
   {
     num: "03",
     title: "Editing & Post",
     description:
-      "Story-driven editing, color grade, sound design, and finishing. Short-form cuts for social or long-form narrative assembly.",
+      "Story-driven editing, color grade, and sound in Adobe Premiere Pro and After Effects — highlight reels, hype videos, and social cutdowns.",
   },
   {
     num: "04",
-    title: "Aerial / Drone",
+    title: "Social Content",
     description:
-      "Licensed aerial cinematography for music videos, real estate, events, and documentary establishing sequences.",
+      "Platform-ready content for Instagram, X, and Facebook, aligned to marketing campaigns and built to engage audiences of 60k+.",
   },
 ] as const;
 
+// Followers / film counts below are placeholders — replace with real numbers.
 export const channels = [
   {
     name: "Vimeo",
-    films: "142",
-    followers: "2.4k",
-    href: "https://vimeo.com/",
+    films: "40+",
+    followers: "1.2k",
+    href: "https://vimeo.com/thomasmeiss",
   },
   {
     name: "YouTube",
-    films: "118",
-    followers: "8.1k",
+    films: "25+",
+    followers: "800",
     href: "https://youtube.com/",
   },
 ] as const;
 
 export const stats = [
-  { value: "12+", label: "Years" },
-  { value: "260", label: "Films" },
-  { value: "9", label: "Awards" },
+  { value: "3+", label: "Years" },
+  { value: "63k", label: "Audience" },
+  { value: "6", label: "Sports" },
 ] as const;
 
 export const pricingTiers = [
   {
-    name: "Story",
-    price: "$2.5k",
-    description: "Focused single-day shoot with edit and delivery for social or web.",
-    features: ["Half-day shoot", "Basic edit & grade", "1 revision round", "Web-optimized delivery"],
+    name: "Game Day",
+    price: "$750",
+    description: "Single-game or event coverage with a fast-turnaround highlight edit built for social.",
+    features: ["Multi-angle capture", "Same-week highlight edit", "Color & sound", "Social-ready formats"],
     featured: false,
   },
   {
-    name: "Feature",
-    price: "$7.5k",
-    description: "Full production package for brands, artists, and couples who want cinematic polish.",
-    features: ["Full-day production", "Advanced edit & sound", "3 revision rounds", "Multi-format delivery"],
+    name: "Highlight Reel",
+    price: "$2k",
+    description: "A cinematic athlete or team reel built from multiple shoots across a season.",
+    features: ["Multi-shoot production", "Story-driven edit", "Motion graphics", "Multi-platform delivery"],
     featured: true,
   },
   {
-    name: "Custom Documentary",
+    name: "Full Season",
     price: "Custom",
-    description: "Long-form documentary projects with research, multi-day shoots, and archival integration.",
-    features: ["Custom scope", "Multi-day production", "Archival & interviews", "Festival-ready deliverables"],
+    description: "Season-long content partnership — recurring game coverage, hype videos, and social cutdowns.",
+    features: ["Recurring coverage", "Highlight & hype reels", "Campaign-aligned content", "Priority scheduling"],
     featured: false,
   },
 ] as const;
 
 export const projectTypes = [
-  "Documentary",
-  "Wedding",
-  "Commercial",
-  "Aerial",
+  "Game Coverage",
+  "Highlight Reel",
+  "Hype Video",
+  "Social Content",
   "Other",
 ] as const;
 
 export const socialLinks = [
-  { label: "Vimeo", href: "https://vimeo.com/" },
-  { label: "YouTube", href: "https://youtube.com/" },
-  { label: "Instagram", href: "https://instagram.com/" },
+  { label: "Vimeo", href: "https://vimeo.com/thomasmeiss" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/thomas-meiss" },
+  { label: "Email", href: "mailto:thomasmeiss.21@gmail.com" },
 ] as const;

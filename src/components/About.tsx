@@ -17,14 +17,15 @@ export function About() {
         >
           <SectionHeading
             title="About"
-            subtitle="Twelve years behind the lens"
+            subtitle="Storytelling, from the set to the final cut"
             className="mb-0"
           />
           <p className="mt-6 font-body text-lg leading-relaxed text-bone-muted">
-            I'm Thomas Meiss — a freelance producer and filmmaker based in the Midwest,
-            working with agencies, artists, and couples who care about craft. Whether it's
-            a vérité documentary, an intimate wedding film, or a punchy brand spot, I lead
-            production from concept through final delivery.
+            I'm Thomas Meiss — a video producer and editor from Kansas City with a B.A. in
+            Film & Media Studies from the University of Kansas. My craft is storytelling at
+            every stage: framing a shot behind the camera and shaping the story in the edit.
+            Over the last three years I've produced and cut high-energy content on tight
+            deadlines — from Big 12 athletics to brand and documentary work.
           </p>
         </motion.div>
         <motion.ul
