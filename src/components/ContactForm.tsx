@@ -84,12 +84,12 @@ export function ContactForm() {
   }
 
   const inputBase =
-    "w-full border bg-transparent px-4 py-3 font-body text-sm text-bone placeholder:text-bone-muted/60 transition-colors focus:outline-none focus:ring-2 focus:ring-ember";
+    "w-full border bg-transparent px-4 py-3 font-body text-sm text-bone placeholder:text-bone-muted/60 transition-colors focus:outline-none focus:ring-2 focus:ring-accent";
   function inputClass(field: Field) {
     return `${inputBase} ${
       fieldErrors[field]
         ? "border-red-400 focus:border-red-400"
-        : "border-border-strong focus:border-ember"
+        : "border-border-strong focus:border-accent"
     }`;
   }
   const labelClass = "mb-2 block font-body text-xs uppercase tracking-widest text-bone-muted";
@@ -109,7 +109,7 @@ export function ContactForm() {
 
         {status === "success" ? (
           <p
-            className="mt-10 font-display text-2xl text-ember-light"
+            className="mt-10 font-display text-2xl text-accent-light"
             role="status"
             aria-live="polite"
           >

@@ -35,9 +35,9 @@ export function WorkGrid() {
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }}
               whileHover={reduced ? undefined : { scale: 1.02 }}
-              className={`group relative overflow-hidden rounded-sm border border-border texture-diagonal bg-ground transition-colors duration-300 hover:border-ember/40 hover:shadow-[0_0_48px_oklch(0.72_0.17_48_/_0.08)] focus-visible:border-ember/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember ${spanClass[project.id]} ${aspectClass[project.aspect]} flex flex-col justify-end p-5`}
+              className={`group relative overflow-hidden rounded-sm border border-border texture-diagonal bg-ground transition-colors duration-300 hover:border-accent/40 hover:shadow-[0_0_48px_oklch(0.72_0.14_245_/_0.1)] focus-visible:border-accent/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${spanClass[project.id]} ${aspectClass[project.aspect]} flex flex-col justify-end p-5`}
             >
-              <span className="mb-3 inline-flex w-fit rounded-full border border-border px-3 py-1 font-body text-[10px] uppercase tracking-[0.15em] text-ember">
+              <span className="mb-3 inline-flex w-fit rounded-full border border-border px-3 py-1 font-body text-[10px] uppercase tracking-[0.15em] text-accent">
                 {project.category}
               </span>
               <div className="flex items-end justify-between gap-4">

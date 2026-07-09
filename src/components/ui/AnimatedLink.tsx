@@ -7,7 +7,7 @@ interface AnimatedLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
 export function AnimatedLink({ children, className = "", ...props }: AnimatedLinkProps) {
   return (
     <a
-      className={`link-underline text-bone transition-colors hover:text-ember-light ${className}`}
+      className={`link-underline text-bone transition-colors hover:text-accent-light ${className}`}
       {...props}
     >
       {children}

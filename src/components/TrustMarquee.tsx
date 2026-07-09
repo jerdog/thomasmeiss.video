@@ -28,7 +28,7 @@ export function TrustMarquee() {
               className="flex items-center gap-12 font-body text-sm uppercase tracking-[0.15em] text-bone-muted"
             >
               {client}
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-ember" />
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
             </span>
           ))}
         </div>
@@ -40,7 +40,7 @@ export function TrustMarquee() {
           onClick={() => setPaused((p) => !p)}
           aria-pressed={paused}
           aria-label={paused ? "Resume scrolling client list" : "Pause scrolling client list"}
-          className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-ground/80 text-bone-muted backdrop-blur-sm transition-colors hover:text-bone focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember"
+          className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-ground/80 text-bone-muted backdrop-blur-sm transition-colors hover:text-bone focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           {paused ? (
             <svg viewBox="0 0 24 24" className="ml-0.5 h-3.5 w-3.5" fill="currentColor" aria-hidden="true">

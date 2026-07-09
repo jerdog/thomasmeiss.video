@@ -25,8 +25,8 @@ function ShowreelThumb({
       onClick={onSelect}
       aria-pressed={selected}
       aria-label={`Show ${reel.title}`}
-      className={`group relative aspect-video overflow-hidden rounded-sm border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember ${
-        selected ? "border-ember" : "border-border hover:border-bone-muted"
+      className={`group relative aspect-video overflow-hidden rounded-sm border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+        selected ? "border-accent" : "border-border hover:border-bone-muted"
       } ${thumb ? "" : "texture-diagonal bg-ground"}`}
       style={
         thumb
@@ -66,7 +66,7 @@ export function Showreel() {
           whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="glow-ember relative"
+          className="glow-accent relative"
         >
           <div className="relative z-10">
             {/* key remounts the facade on reel change, stopping any playback */}

@@ -19,7 +19,7 @@ export function Hero() {
         <motion.p
           {...motionProps}
           transition={{ duration: 0.7, delay: 0 }}
-          className="mb-6 font-body text-xs font-semibold uppercase tracking-[0.25em] text-ember"
+          className="mb-6 font-body text-xs font-semibold uppercase tracking-[0.25em] text-accent"
         >
           {site.tagline}
         </motion.p>
@@ -29,7 +29,7 @@ export function Hero() {
           className="max-w-4xl font-display text-[clamp(2.75rem,8vw,5.5rem)] leading-[1.05] tracking-tight text-bone"
         >
           Stories worth{" "}
-          <em className="text-ember-light not-italic">framing</em> — documentary,
+          <em className="text-accent-light not-italic">framing</em> — documentary,
           wedding, and commercial film.
         </motion.h1>
         <motion.p

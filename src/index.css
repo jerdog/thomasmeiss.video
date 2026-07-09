@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ground: #0a0a0b;
+  --color-ground: #23282e;
   --color-bone: #f4f1ea;
   --color-bone-muted: oklch(0.94 0.01 85 / 0.65);
-  --color-ember: oklch(0.72 0.17 48);
-  --color-ember-light: oklch(0.82 0.13 55);
+  --color-accent: oklch(0.72 0.14 245);
+  --color-accent-light: oklch(0.82 0.1 245);
   --color-border: oklch(1 0 0 / 0.24);
   /* Meets WCAG 1.4.11 (3:1) for essential control boundaries — e.g. form inputs */
   --color-border-strong: oklch(1 0 0 / 0.4);
@@ -34,7 +34,7 @@
   }
 
   ::selection {
-    @apply bg-ember/30 text-bone;
+    @apply bg-accent/30 text-bone;
   }
 }
 
@@ -49,15 +49,15 @@
     );
   }
 
-  .glow-ember {
+  .glow-accent {
     position: relative;
   }
 
-  .glow-ember::before {
+  .glow-accent::before {
     content: "";
     position: absolute;
     inset: -20%;
-    background: radial-gradient(ellipse at center, oklch(0.72 0.17 48 / 0.12), transparent 70%);
+    background: radial-gradient(ellipse at center, oklch(0.72 0.14 245 / 0.12), transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
@@ -78,7 +78,7 @@
     bottom: -2px;
     width: 0;
     height: 1px;
-    background: var(--color-ember);
+    background: var(--color-accent);
     transition: width 0.3s ease;
   }
 

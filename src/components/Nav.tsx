@@ -44,7 +44,7 @@ export function Nav() {
         <div className="flex min-w-0 items-center justify-between gap-2 sm:gap-4">
           <a
             href="#main"
-            className="min-w-0 shrink font-display text-lg leading-tight tracking-tight text-bone transition-colors hover:text-ember-light sm:text-xl md:text-2xl"
+            className="min-w-0 shrink font-display text-lg leading-tight tracking-tight text-bone transition-colors hover:text-accent-light sm:text-xl md:text-2xl"
           >
             {site.name}
           </a>
@@ -69,7 +69,7 @@ export function Nav() {
 
             <button
               type="button"
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-border text-bone transition-colors hover:border-bone-muted hover:text-ember-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember md:hidden"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-border text-bone transition-colors hover:border-bone-muted hover:text-accent-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent md:hidden"
               aria-expanded={menuOpen}
               aria-controls={menuId}
               aria-label={menuOpen ? "Close menu" : "Open menu"}

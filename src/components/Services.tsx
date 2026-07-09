@@ -77,7 +77,7 @@ export function Services() {
                   onClick={() => setActive(i)}
                   onKeyDown={handleKeyDown}
                   className={`group flex w-full items-center gap-4 border-b border-border py-4 text-left transition-colors ${
-                    active === i ? "text-ember" : "text-bone-muted hover:text-bone"
+                    active === i ? "text-accent" : "text-bone-muted hover:text-bone"
                   }`}
                 >
                   <span className="font-body text-xs tracking-widest">{service.num}</span>
@@ -108,7 +108,7 @@ export function Services() {
             animate={reduced ? undefined : { opacity: 1, x: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
           >
-            <p className="mb-2 font-body text-xs uppercase tracking-[0.2em] text-ember">
+            <p className="mb-2 font-body text-xs uppercase tracking-[0.2em] text-accent">
               {activeService.num} — {activeService.title}
             </p>
             <p className="max-w-lg font-body text-lg leading-relaxed text-bone-muted">

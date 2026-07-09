@@ -36,7 +36,7 @@ export function About() {
         >
           {stats.map((stat) => (
             <li key={stat.label} className="text-center">
-              <p className="font-display text-5xl text-ember-light lg:text-6xl">{stat.value}</p>
+              <p className="font-display text-5xl text-accent-light lg:text-6xl">{stat.value}</p>
               <p className="mt-2 font-body text-xs uppercase tracking-[0.2em] text-bone-muted">
                 {stat.label}
               </p>

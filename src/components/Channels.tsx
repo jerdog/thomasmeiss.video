@@ -20,17 +20,17 @@ export function Channels() {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: i * 0.1 }}
               whileHover={reduced ? undefined : { y: -4 }}
-              className="border border-border p-8 transition-colors duration-300 hover:border-ember/30"
+              className="border border-border p-8 transition-colors duration-300 hover:border-accent/30"
             >
               <h3 className="font-display text-3xl text-bone">{channel.name}</h3>
               <dl className="mt-6 flex gap-10">
                 <div>
                   <dt className="font-body text-xs uppercase tracking-widest text-bone-muted">Films</dt>
-                  <dd className="mt-1 font-display text-2xl text-ember-light">{channel.films}</dd>
+                  <dd className="mt-1 font-display text-2xl text-accent-light">{channel.films}</dd>
                 </div>
                 <div>
                   <dt className="font-body text-xs uppercase tracking-widest text-bone-muted">Followers</dt>
-                  <dd className="mt-1 font-display text-2xl text-ember-light">{channel.followers}</dd>
+                  <dd className="mt-1 font-display text-2xl text-accent-light">{channel.followers}</dd>
                 </div>
               </dl>
               <AnimatedLink
