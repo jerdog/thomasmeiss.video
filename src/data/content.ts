@@ -11,13 +11,10 @@ export const navLinks = [
   { label: "Pricing", href: "#pricing" },
 ] as const;
 
-export const showreels = [
-  { id: "reel-1", title: "Showreel 1", vimeoId: "1127965932" as string | null },
-  { id: "reel-2", title: "Showreel 2", vimeoId: null as string | null },
-  { id: "reel-3", title: "Showreel 3", vimeoId: null as string | null },
-  { id: "reel-4", title: "Showreel 4", vimeoId: null as string | null },
-  { id: "reel-5", title: "Showreel 5", vimeoId: null as string | null },
-] as const;
+export const showreel = {
+  title: "Showreel",
+  vimeoId: "1127965932" as string | null,
+} as const;
 
 export const trustClients = [
   "Ad agencies",
@@ -27,38 +24,36 @@ export const trustClients = [
   "Brands",
 ] as const;
 
+// Selected Work — 4 Vimeo reels shown as inline click-to-play facades.
+// Drop each real Vimeo ID into vimeoId (one line each); null shows "Coming soon".
 export const projects = [
   {
     id: "documentary",
     title: "Voices of the Valley",
     category: "Documentary",
     aspect: "wide" as const,
-    href: "https://vimeo.com/",
-    platform: "Vimeo",
+    vimeoId: null as string | null,
   },
   {
     id: "wedding",
     title: "Amelia & James",
     category: "Wedding",
     aspect: "tall" as const,
-    href: "https://vimeo.com/",
-    platform: "Vimeo",
+    vimeoId: null as string | null,
   },
   {
     id: "commercial",
     title: "Launch Sequence",
     category: "Commercial",
     aspect: "tall" as const,
-    href: "https://youtube.com/",
-    platform: "YouTube",
+    vimeoId: null as string | null,
   },
   {
     id: "aerial",
     title: "Skyline Sessions",
     category: "Aerial",
     aspect: "wide" as const,
-    href: "https://youtube.com/",
-    platform: "YouTube",
+    vimeoId: null as string | null,
   },
 ] as const;
 

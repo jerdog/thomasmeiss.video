@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import { projects } from "../data/content";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 import { SectionHeading } from "./ui/SectionHeading";
+import { VimeoFacade } from "./ui/VimeoFacade";
 
 const spanClass: Record<string, string> = {
   documentary: "md:col-span-4 md:row-span-1",
@@ -24,32 +25,21 @@ export function WorkGrid() {
         <SectionHeading title="Selected Work" />
         <div className="grid grid-cols-1 gap-4 md:grid-cols-6 md:auto-rows-[minmax(180px,auto)]">
           {projects.map((project, i) => (
-            <motion.a
+            <motion.div
               key={project.id}
-              href={project.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`${project.title} (opens on ${project.platform} in new tab)`}
               initial={reduced ? false : { opacity: 0, y: 24 }}
               whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }}
-              whileHover={reduced ? undefined : { scale: 1.02 }}
-              className={`group relative overflow-hidden rounded-sm border border-border texture-diagonal bg-ground transition-colors duration-300 hover:border-accent/40 hover:shadow-[0_0_48px_oklch(0.72_0.14_245_/_0.1)] focus-visible:border-accent/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${spanClass[project.id]} ${aspectClass[project.aspect]} flex flex-col justify-end p-5`}
+              className={`${spanClass[project.id]} ${aspectClass[project.aspect]}`}
             >
-              <span className="mb-3 inline-flex w-fit rounded-full border border-border px-3 py-1 font-body text-[10px] uppercase tracking-[0.15em] text-accent">
-                {project.category}
-              </span>
-              <div className="flex items-end justify-between gap-4">
-                <h3 className="font-display text-2xl text-bone">{project.title}</h3>
-                <span
-                  className="translate-x-2 font-body text-sm text-bone-muted opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100"
-                  aria-hidden="true"
-                >
-                  {project.platform} →
-                </span>
-              </div>
-            </motion.a>
+              <VimeoFacade
+                vimeoId={project.vimeoId}
+                title={project.title}
+                category={project.category}
+                className="h-full"
+              />
+            </motion.div>
           ))}
         </div>
       </div>
