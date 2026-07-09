@@ -11,6 +11,14 @@ export const navLinks = [
   { label: "Pricing", href: "#pricing" },
 ] as const;
 
+export const showreels = [
+  { id: "reel-1", title: "Showreel 1", vimeoId: "1127965932" as string | null },
+  { id: "reel-2", title: "Showreel 2", vimeoId: null as string | null },
+  { id: "reel-3", title: "Showreel 3", vimeoId: null as string | null },
+  { id: "reel-4", title: "Showreel 4", vimeoId: null as string | null },
+  { id: "reel-5", title: "Showreel 5", vimeoId: null as string | null },
+] as const;
+
 export const trustClients = [
   "Ad agencies",
   "Recording artists",

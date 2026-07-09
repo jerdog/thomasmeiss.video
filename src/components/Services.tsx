@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type KeyboardEvent } from "react";
 import { motion } from "motion/react";
 import { services } from "../data/content";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
@@ -14,6 +14,36 @@ export function Services() {
   const [active, setActive] = useState(0);
   const reduced = usePrefersReducedMotion();
   const activeService = services[active];
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  function focusTab(index: number) {
+    const next = (index + services.length) % services.length;
+    setActive(next);
+    tabRefs.current[next]?.focus();
+  }
+
+  function handleKeyDown(e: KeyboardEvent<HTMLButtonElement>) {
+    switch (e.key) {
+      case "ArrowDown":
+      case "ArrowRight":
+        e.preventDefault();
+        focusTab(active + 1);
+        break;
+      case "ArrowUp":
+      case "ArrowLeft":
+        e.preventDefault();
+        focusTab(active - 1);
+        break;
+      case "Home":
+        e.preventDefault();
+        focusTab(0);
+        break;
+      case "End":
+        e.preventDefault();
+        focusTab(services.length - 1);
+        break;
+    }
+  }
 
   return (
     <section id="services" className="px-6 py-24 lg:px-10 lg:py-32">
@@ -24,12 +54,20 @@ export function Services() {
             subtitle="What I bring to your project"
             className="mb-0"
           />
-          <ul className="mt-10 space-y-2" role="tablist" aria-label="Services">
+          <ul
+            className="mt-10 space-y-2"
+            role="tablist"
+            aria-label="Services"
+            aria-orientation="vertical"
+          >
             {services.map((service, i) => (
               <li key={service.num} role="presentation">
                 <button
                   type="button"
                   id={tabId(i)}
+                  ref={(el) => {
+                    tabRefs.current[i] = el;
+                  }}
                   role="tab"
                   aria-selected={active === i}
                   aria-controls={PANEL_ID}
@@ -37,6 +75,7 @@ export function Services() {
                   onMouseEnter={() => setActive(i)}
                   onFocus={() => setActive(i)}
                   onClick={() => setActive(i)}
+                  onKeyDown={handleKeyDown}
                   className={`group flex w-full items-center gap-4 border-b border-border py-4 text-left transition-colors ${
                     active === i ? "text-ember" : "text-bone-muted hover:text-bone"
                   }`}
