@@ -33,36 +33,46 @@ export const trustClients = [
   "Volleyball",
 ] as const;
 
-// Selected Work — 4 Vimeo reels shown as inline click-to-play facades.
-// Drop each real Vimeo ID into vimeoId (one line each); null shows "Coming soon".
+// Selected Work — Vimeo reels shown as inline click-to-play facades.
+//
+// `ratio` is the video's TRUE aspect ratio (verified against Vimeo oEmbed) and
+// is applied via CSS aspect-ratio, so tiles are never cropped. `span` picks the
+// bento column width — array order is the on-screen order.
+//   feature = 8/12 cols   accent = 4/12   half = 6/12
+// Drop a real Vimeo ID into vimeoId; null shows "Coming soon".
 export const projects = [
   {
-    id: "basketball",
-    title: "Allen Fieldhouse Nights",
-    category: "Basketball",
-    aspect: "wide" as const,
-    vimeoId: null as string | null,
-  },
-  {
-    id: "football",
-    title: "Gameday: Kansas Football",
+    id: "poetry-in-motion",
+    title: "Poetry in Motion",
     category: "Football",
-    aspect: "tall" as const,
-    vimeoId: null as string | null,
+    ratio: "16 / 9",
+    span: "feature",
+    vimeoId: "1163383011" as string | null,
   },
   {
-    id: "olympic",
-    title: "Rowing at Dawn",
-    category: "Olympic Sports",
-    aspect: "tall" as const,
-    vimeoId: null as string | null,
+    // 1:1 composed graphic with a bottom logo lockup — must not be cropped.
+    id: "devin-neal-graphic",
+    title: "Graphics in Motion",
+    category: "Graphic Motion",
+    ratio: "1 / 1",
+    span: "accent",
+    vimeoId: "1127261328" as string | null,
   },
   {
-    id: "hype",
-    title: "Season Hype Reel",
-    category: "Hype Reel",
-    aspect: "wide" as const,
-    vimeoId: null as string | null,
+    id: "violence",
+    title: "Violence",
+    category: "Weightlifting",
+    ratio: "16 / 9",
+    span: "half",
+    vimeoId: "1170405779" as string | null,
+  },
+  {
+    id: "championship-stinger",
+    title: "Championship Stinger",
+    category: "Tennis",
+    ratio: "16 / 9",
+    span: "half",
+    vimeoId: "1189199066" as string | null,
   },
 ] as const;
 
