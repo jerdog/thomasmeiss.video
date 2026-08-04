@@ -12,8 +12,11 @@ type VimeoFacadeProps = {
   className?: string;
 };
 
+// `block` matters: a <button> defaults to inline-block, which sits on a text
+// baseline and adds descender space below it — enough to push a parent sized by
+// aspect-ratio past its intended height and crop the poster.
 const FRAME =
-  "relative w-full overflow-hidden rounded-sm border border-border bg-ground";
+  "relative block w-full overflow-hidden rounded-sm border border-border bg-ground";
 
 /**
  * Lazy "facade" embed: shows a poster + play button and only loads Vimeo's
