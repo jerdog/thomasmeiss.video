@@ -37,7 +37,7 @@ Open [http://localhost:5173](http://localhost:5173).
 |--------|---------|
 | `npm run dev` | Vite dev server (Workers runtime via Cloudflare plugin) |
 | `npm run build` | Typecheck + production build |
-| `npm run deploy` | Build + `wrangler deploy` |
+| `npm run deploy` | Build + deploy via [`scripts/deploy.sh`](scripts/deploy.sh) (pins the Cloudflare account) |
 | `npm run preview` | Preview production build locally |
 | `npm run types` | Regenerate `worker-configuration.d.ts` from `wrangler.jsonc` |
 
@@ -96,10 +96,25 @@ Alternatively, uncomment the `vars` block in `wrangler.jsonc` for config-as-code
 
 ### 3. Deploy
 
+Deploys run through [`scripts/deploy.sh`](scripts/deploy.sh), which reads credentials from `.dev.vars` and exports them for Wrangler. This pins the target account explicitly — necessary on a machine signed into more than one Cloudflare account, where `wrangler login` state would otherwise decide where the Worker lands.
+
+Add to your gitignored `.dev.vars`:
+
 ```bash
-npx wrangler login
-npm run deploy
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+CLOUDFLARE_API_TOKEN=your-api-token   # needs Workers Scripts:Edit
 ```
+
+Then:
+
+```bash
+npm run deploy              # build + deploy
+npm run deploy -- --dry-run # extra args pass through to `wrangler deploy`
+```
+
+No `wrangler login` needed. The script fails fast with a clear message if either value is missing.
+
+These two keys are read **only** by the deploy script. Wrangler does not upload `.dev.vars` on deploy, and `dist/client/.assetsignore` keeps it out of the static-asset upload, so the token never reaches the Worker or the public site. It *is* injected into the local dev Worker's `env` like any other `.dev.vars` entry, and `npm run types` will add both names (not values) to the tracked `worker-configuration.d.ts`.
 
 ### 4. Custom domain
 
