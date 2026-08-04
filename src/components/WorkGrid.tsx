@@ -4,16 +4,20 @@ import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
 import { SectionHeading } from "./ui/SectionHeading";
 import { VimeoFacade } from "./ui/VimeoFacade";
 
-const spanClass: Record<string, string> = {
-  basketball: "md:col-span-4 md:row-span-1",
-  football: "md:col-span-2 md:row-span-2",
-  olympic: "md:col-span-2 md:row-span-2",
-  hype: "md:col-span-4 md:row-span-1",
-};
+/**
+ * Bento columns on a 12-col grid. Keyed off the `span` union in content.ts, so
+ * adding a project with an unknown span is a compile error rather than an
+ * `undefined` className that silently drops the tile out of the layout.
+ */
+type ProjectSpan = (typeof projects)[number]["span"];
 
-const aspectClass: Record<string, string> = {
-  wide: "aspect-video",
-  tall: "aspect-[4/5]",
+const spanClass: Record<ProjectSpan, string> = {
+  feature: "md:col-span-8",
+  // No integer span pairs a 1:1 tile to a 16:9 one at equal height, so the
+  // square is bottom-aligned: row 1 keeps a clean baseline and the offset
+  // reads as deliberate rather than as a ragged edge.
+  accent: "md:col-span-4 md:self-end",
+  half: "md:col-span-6",
 };
 
 export function WorkGrid() {
@@ -23,7 +27,9 @@ export function WorkGrid() {
     <section id="work" className="px-6 py-24 lg:px-10 lg:py-32">
       <div className="mx-auto max-w-7xl">
         <SectionHeading title="Selected Work" />
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-6 md:auto-rows-[minmax(180px,auto)]">
+        {/* items-start, not stretch: a stretched row would override each tile's
+            aspect-ratio and distort the square graphic. */}
+        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-12">
           {projects.map((project, i) => (
             <motion.div
               key={project.id}
@@ -31,7 +37,8 @@ export function WorkGrid() {
               whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.6, delay: i * 0.08, ease: "easeOut" }}
-              className={`${spanClass[project.id]} ${aspectClass[project.aspect]}`}
+              style={{ aspectRatio: project.ratio }}
+              className={spanClass[project.span]}
             >
               <VimeoFacade
                 vimeoId={project.vimeoId}

@@ -12,19 +12,29 @@ export function Footer() {
       <div className="mx-auto flex max-w-7xl flex-col gap-8 md:flex-row md:items-center md:justify-between">
         <p className="font-display text-lg text-bone">{site.name}</p>
         <ul className="flex flex-wrap gap-6">
-          {socialLinks.map((link) => (
-            <li key={link.label}>
-              <AnimatedLink
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${link.label} (opens in new tab)`}
-                className="inline-flex min-h-11 items-center text-sm"
-              >
-                {link.label}
-              </AnimatedLink>
-            </li>
-          ))}
+          {socialLinks.map((link) => {
+            // mailto: hands off to a mail client — announcing "opens in new tab"
+            // would describe something that never happens.
+            const isMailto = link.href.startsWith("mailto:");
+            return (
+              <li key={link.label}>
+                <AnimatedLink
+                  href={link.href}
+                  {...(isMailto
+                    ? {}
+                    : { target: "_blank", rel: "noopener noreferrer" })}
+                  aria-label={
+                    isMailto
+                      ? `Email ${site.name}`
+                      : `${link.label} (opens in new tab)`
+                  }
+                  className="inline-flex min-h-11 items-center text-sm"
+                >
+                  {link.label}
+                </AnimatedLink>
+              </li>
+            );
+          })}
         </ul>
         <p className="font-body text-xs text-bone-muted">
           © {year} {site.name}. All rights reserved.

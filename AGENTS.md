@@ -17,7 +17,8 @@ Single-page portfolio for **Thomas Meiss Video** at **thomasmeiss.video**. Noir 
 | Analytics | **Cloudflare Web Analytics** | Dashboard setup post-deploy; no third-party cookie banner |
 | Env vars | **`keep_vars: true`** + dashboard Variables | Production secrets/vars managed in Workers dashboard; local via `.dev.vars` |
 | Scaffold | **Manual** (not create-cloudflare) | Folder name `thomasmeiss.video` breaks C3 project naming |
-| Content | **`src/data/content.ts`** | Single source for copy, links, pricing — not inline in components |
+| Content | **`src/data/content.ts`** | Single source for copy and links — not inline in components |
+| Pricing | **No published tiers** | Every project scoped individually; pricing copy merged into the contact section |
 | Section titles | **`SectionHeading` → `h2` + `font-display`** | Matches hero `h1` typography; subtitle optional as muted `p` |
 | Motion | **`motion` + `usePrefersReducedMotion`** | Respect `prefers-reduced-motion` globally in CSS too |
 
@@ -36,16 +37,15 @@ docs/plan.md               Human-readable roadmap and status
 ### Page sections (order in App.tsx)
 
 1. Nav — sticky, mobile hamburger menu
-2. Hero — sole `h1`
+2. Hero — sole `h1`; 2-col on `lg` with portrait placeholder (set `heroPortrait.src` to swap in a real image)
 3. TrustMarquee — decorative, `aria-hidden`
 4. Showreel — placeholder (no fake play button)
 5. WorkGrid — 6-col bento, external project links
 6. Services — ARIA tablist + tabpanel
 7. Channels
 8. About
-9. Pricing
-10. ContactForm — POST `/api/contact`
-11. Footer
+9. ContactForm — merged pricing + contact section; POST `/api/contact`
+10. Footer
 
 ## Design system
 
@@ -110,7 +110,9 @@ Run manual keyboard pass after nav/form changes.
 
 ### Adding content
 
-- New projects, pricing tiers, nav links → `content.ts`
+- New projects, nav links, pricing copy, hero portrait → `content.ts`
+- Placeholders (no media yet): `texture-diagonal` frame + `role="img"` + `aria-label`, never a fake interactive control — see `VimeoFacade` and the Hero portrait
+- Interactive targets: `min-h-11` (44px). Sub-24px targets fail WCAG 2.2 SC 2.5.8 unless spaced apart
 - New section → component in `src/components/`, import in `App.tsx`, add nav link if needed
 
 ### Adding Worker routes

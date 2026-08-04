@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
-import { stats } from "../data/content";
+import { channels } from "../data/content";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
+import { AnimatedLink } from "./ui/AnimatedLink";
 import { SectionHeading } from "./ui/SectionHeading";
 
 export function About() {
@@ -8,7 +9,7 @@ export function About() {
 
   return (
     <section id="about" className="border-y border-border px-6 py-24 lg:px-10 lg:py-32">
-      <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-2 lg:gap-20">
+      <div className="mx-auto grid max-w-7xl items-start gap-12 lg:grid-cols-[1.4fr_1fr] lg:gap-20">
         <motion.div
           initial={reduced ? false : { opacity: 0, y: 24 }}
           whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
@@ -28,22 +29,38 @@ export function About() {
             deadlines — from Big 12 athletics to brand and documentary work.
           </p>
         </motion.div>
-        <motion.ul
+
+        {/* Keeps id="channels" so existing #channels links still resolve — the
+            `:target` rule in index.css supplies the fixed-header offset. */}
+        <motion.div
+          id="channels"
           initial={reduced ? false : { opacity: 0, y: 24 }}
           whileInView={reduced ? undefined : { opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.15 }}
-          className="flex flex-wrap items-center gap-10 lg:justify-end"
+          className="border border-border p-8"
         >
-          {stats.map((stat) => (
-            <li key={stat.label} className="text-center">
-              <p className="font-display text-5xl text-accent-light lg:text-6xl">{stat.value}</p>
-              <p className="mt-2 font-body text-xs uppercase tracking-[0.2em] text-bone-muted">
-                {stat.label}
-              </p>
-            </li>
-          ))}
-        </motion.ul>
+          <h3 className="font-body text-xs uppercase tracking-widest text-bone-muted">
+            Channels
+          </h3>
+          <ul className="mt-6 space-y-6">
+            {channels.map((channel) => (
+              <li key={channel.name}>
+                <p className="font-display text-3xl text-bone">{channel.name}</p>
+                <p className="mt-1 font-body text-sm text-bone-muted">{channel.handle}</p>
+                <AnimatedLink
+                  href={channel.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Open ${channel.name} channel (opens in new tab)`}
+                  className="mt-4 inline-flex min-h-11 items-center text-sm"
+                >
+                  Open channel →
+                </AnimatedLink>
+              </li>
+            ))}
+          </ul>
+        </motion.div>
       </div>
     </section>
   );

@@ -1,5 +1,5 @@
-import { useRef, useState, type FormEvent } from "react";
-import { projectTypes } from "../data/content";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { pricing, projectTypes } from "../data/content";
 import { PillButton } from "./ui/PillButton";
 import { SectionHeading } from "./ui/SectionHeading";
 
@@ -36,6 +36,13 @@ export function ContactForm() {
     projectType: useRef<HTMLSelectElement>(null),
     message: useRef<HTMLTextAreaElement>(null),
   };
+  const successRef = useRef<HTMLParagraphElement>(null);
+
+  // The form unmounts on success, so focus would fall back to <body>. Move it
+  // to the confirmation instead — aria-live announces, it does not focus.
+  useEffect(() => {
+    if (status === "success") successRef.current?.focus();
+  }, [status]);
 
   function clearFieldError(field: Field) {
     setFieldErrors((prev) => {
@@ -97,20 +104,33 @@ export function ContactForm() {
 
   return (
     <section id="contact" className="px-6 py-24 lg:px-10 lg:py-32">
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto max-w-3xl">
         <SectionHeading
-          title="Contact"
-          subtitle="Start a conversation"
+          title={pricing.heading}
+          subtitle={pricing.subheading}
           className="mb-0"
         />
-        <p className="mt-4 font-body text-bone-muted">
-          Have a project, game, or opportunity in mind? Tell me about it — I'll reply
-          within two business days.
+        <p className="mt-4 font-body leading-relaxed text-bone-muted">
+          {pricing.lead}
         </p>
+
+        <h3 className="mt-10 font-body text-xs uppercase tracking-widest text-bone-muted">
+          {pricing.includesTitle}
+        </h3>
+        <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+          {pricing.includes.map((item) => (
+            <li key={item} className="flex gap-2 font-body text-sm text-bone-muted">
+              <span className="text-accent" aria-hidden="true">—</span>
+              {item}
+            </li>
+          ))}
+        </ul>
 
         {status === "success" ? (
           <p
-            className="mt-10 font-display text-2xl text-accent-light"
+            ref={successRef}
+            tabIndex={-1}
+            className="mt-10 font-display text-2xl text-accent-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
             role="status"
             aria-live="polite"
           >

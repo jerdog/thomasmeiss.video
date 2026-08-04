@@ -7,9 +7,18 @@ export const site = {
 export const navLinks = [
   { label: "Work", href: "#work" },
   { label: "Services", href: "#services" },
-  { label: "Channels", href: "#channels" },
-  { label: "Pricing", href: "#pricing" },
+  { label: "About", href: "#about" },
 ] as const;
+
+// Hero portrait, presented inside a viewfinder frame.
+// With no `src` the frame stands empty on purpose — framing marks and thirds
+// guides, no "coming soon" copy on the first screen.
+// `meta` is the optional slate line beneath the photo; set it only if true.
+export const heroPortrait = {
+  src: "/action-shot.webp" as string | null,
+  alt: "Thomas Meiss on location, shooting with a Sony mirrorless",
+  meta: null as string | null, // e.g. "FX6 · 50mm · Lawrence, KS"
+} as const;
 
 export const showreel = {
   title: "Showreel",
@@ -25,36 +34,46 @@ export const trustClients = [
   "Volleyball",
 ] as const;
 
-// Selected Work — 4 Vimeo reels shown as inline click-to-play facades.
-// Drop each real Vimeo ID into vimeoId (one line each); null shows "Coming soon".
+// Selected Work — Vimeo reels shown as inline click-to-play facades.
+//
+// `ratio` is the video's TRUE aspect ratio (verified against Vimeo oEmbed) and
+// is applied via CSS aspect-ratio, so tiles are never cropped. `span` picks the
+// bento column width — array order is the on-screen order.
+//   feature = 8/12 cols   accent = 4/12   half = 6/12
+// Drop a real Vimeo ID into vimeoId; null shows "Coming soon".
 export const projects = [
   {
-    id: "basketball",
-    title: "Allen Fieldhouse Nights",
-    category: "Basketball",
-    aspect: "wide" as const,
-    vimeoId: null as string | null,
-  },
-  {
-    id: "football",
-    title: "Gameday: Kansas Football",
+    id: "poetry-in-motion",
+    title: "Poetry in Motion",
     category: "Football",
-    aspect: "tall" as const,
-    vimeoId: null as string | null,
+    ratio: "16 / 9",
+    span: "feature",
+    vimeoId: "1163383011" as string | null,
   },
   {
-    id: "olympic",
-    title: "Rowing at Dawn",
-    category: "Olympic Sports",
-    aspect: "tall" as const,
-    vimeoId: null as string | null,
+    // 1:1 composed graphic with a bottom logo lockup — must not be cropped.
+    id: "devin-neal-graphic",
+    title: "Graphics in Motion",
+    category: "Graphic Motion",
+    ratio: "1 / 1",
+    span: "accent",
+    vimeoId: "1127261328" as string | null,
   },
   {
-    id: "hype",
-    title: "Season Hype Reel",
-    category: "Hype Reel",
-    aspect: "wide" as const,
-    vimeoId: null as string | null,
+    id: "violence",
+    title: "Violence",
+    category: "Weightlifting",
+    ratio: "16 / 9",
+    span: "half",
+    vimeoId: "1170405779" as string | null,
+  },
+  {
+    id: "championship-stinger",
+    title: "Championship Stinger",
+    category: "Tennis",
+    ratio: "16 / 9",
+    span: "half",
+    vimeoId: "1189199066" as string | null,
   },
 ] as const;
 
@@ -85,51 +104,34 @@ export const services = [
   },
 ] as const;
 
-// Followers / film counts below are placeholders — replace with real numbers.
+// No follower or film counts here on purpose — the work in Selected Work is the
+// argument, and vanity metrics on a page selling services invite a fact-check.
+// Add a channel only when there is a real profile behind it.
 export const channels = [
   {
     name: "Vimeo",
-    films: "40+",
-    followers: "1.2k",
+    handle: "@thomas-meiss",
     href: "https://vimeo.com/thomasmeiss",
   },
-  {
-    name: "YouTube",
-    films: "25+",
-    followers: "800",
-    href: "https://youtube.com/",
-  },
 ] as const;
 
-export const stats = [
-  { value: "3+", label: "Years" },
-  { value: "63k", label: "Audience" },
-  { value: "6", label: "Sports" },
-] as const;
-
-export const pricingTiers = [
-  {
-    name: "Game Day",
-    price: "$750",
-    description: "Single-game or event coverage with a fast-turnaround highlight edit built for social.",
-    features: ["Multi-angle capture", "Same-week highlight edit", "Color & sound", "Social-ready formats"],
-    featured: false,
-  },
-  {
-    name: "Highlight Reel",
-    price: "$2k",
-    description: "A cinematic athlete or team reel built from multiple shoots across a season.",
-    features: ["Multi-shoot production", "Story-driven edit", "Motion graphics", "Multi-platform delivery"],
-    featured: true,
-  },
-  {
-    name: "Full Season",
-    price: "Custom",
-    description: "Season-long content partnership — recurring game coverage, hype videos, and social cutdowns.",
-    features: ["Recurring coverage", "Highlight & hype reels", "Campaign-aligned content", "Priority scheduling"],
-    featured: false,
-  },
-] as const;
+// No fixed tiers — every project is scoped individually. Copy for the merged
+// pricing + contact section.
+export const pricing = {
+  heading: "Let's talk",
+  subheading: "Pricing & project inquiries",
+  lead:
+    "Every project is unique, and I'd love to put together the best possible package tailored to your needs. Tell me what you have in mind — what you're shooting, when, and where — and I'll reply within two business days.",
+  includesTitle: "A package can include",
+  includes: [
+    "Multi-angle game & event capture",
+    "Story-driven highlight edits",
+    "Hype videos & season recaps",
+    "Motion graphics",
+    "Color grade & sound",
+    "Social-ready cutdowns",
+  ],
+} as const;
 
 export const projectTypes = [
   "Game Coverage",

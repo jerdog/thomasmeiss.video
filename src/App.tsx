@@ -1,10 +1,8 @@
 import { About } from "./components/About";
-import { Channels } from "./components/Channels";
 import { ContactForm } from "./components/ContactForm";
 import { Footer } from "./components/Footer";
 import { Hero } from "./components/Hero";
 import { Nav } from "./components/Nav";
-import { Pricing } from "./components/Pricing";
 import { Services } from "./components/Services";
 import { Showreel } from "./components/Showreel";
 import { TrustMarquee } from "./components/TrustMarquee";
@@ -26,9 +24,7 @@ export default function App() {
         <Showreel />
         <WorkGrid />
         <Services />
-        <Channels />
         <About />
-        <Pricing />
         <ContactForm />
       </main>
       <Footer />
