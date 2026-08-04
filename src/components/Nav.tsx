@@ -49,7 +49,7 @@ export function Nav() {
             {site.name}
           </a>
 
-          <ul className="hidden items-center gap-8 md:flex">
+          <ul className="ml-auto hidden items-center gap-8 md:mr-6 md:flex">
             {navLinks.map((link) => (
               <li key={link.href}>
                 <a

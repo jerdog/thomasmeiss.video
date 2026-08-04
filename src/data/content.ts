@@ -8,8 +8,16 @@ export const navLinks = [
   { label: "Work", href: "#work" },
   { label: "Services", href: "#services" },
   { label: "Channels", href: "#channels" },
-  { label: "Pricing", href: "#pricing" },
 ] as const;
+
+// Hero portrait. Drop a real image in public/ and set `src` (e.g. "/thomas.jpg")
+// to replace the placeholder frame — `alt` is already written for it.
+export const heroPortrait = {
+  src: null as string | null,
+  alt: "Thomas Meiss on location, shooting with a cinema camera",
+  placeholderTitle: "Thomas Meiss",
+  placeholderNote: "Portrait coming soon",
+} as const;
 
 export const showreel = {
   title: "Showreel",
@@ -107,29 +115,23 @@ export const stats = [
   { value: "6", label: "Sports" },
 ] as const;
 
-export const pricingTiers = [
-  {
-    name: "Game Day",
-    price: "$750",
-    description: "Single-game or event coverage with a fast-turnaround highlight edit built for social.",
-    features: ["Multi-angle capture", "Same-week highlight edit", "Color & sound", "Social-ready formats"],
-    featured: false,
-  },
-  {
-    name: "Highlight Reel",
-    price: "$2k",
-    description: "A cinematic athlete or team reel built from multiple shoots across a season.",
-    features: ["Multi-shoot production", "Story-driven edit", "Motion graphics", "Multi-platform delivery"],
-    featured: true,
-  },
-  {
-    name: "Full Season",
-    price: "Custom",
-    description: "Season-long content partnership — recurring game coverage, hype videos, and social cutdowns.",
-    features: ["Recurring coverage", "Highlight & hype reels", "Campaign-aligned content", "Priority scheduling"],
-    featured: false,
-  },
-] as const;
+// No fixed tiers — every project is scoped individually. Copy for the merged
+// pricing + contact section.
+export const pricing = {
+  heading: "Let's talk",
+  subheading: "Pricing & project inquiries",
+  lead:
+    "Every project is unique, and I'd love to put together the best possible package tailored to your needs. Tell me what you have in mind — what you're shooting, when, and where — and I'll reply within two business days.",
+  includesTitle: "A package can include",
+  includes: [
+    "Multi-angle game & event capture",
+    "Story-driven highlight edits",
+    "Hype videos & season recaps",
+    "Motion graphics",
+    "Color grade & sound",
+    "Social-ready cutdowns",
+  ],
+} as const;
 
 export const projectTypes = [
   "Game Coverage",
