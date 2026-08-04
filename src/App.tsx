@@ -1,5 +1,4 @@
 import { About } from "./components/About";
-import { Channels } from "./components/Channels";
 import { ContactForm } from "./components/ContactForm";
 import { Footer } from "./components/Footer";
 import { Hero } from "./components/Hero";
@@ -25,7 +24,6 @@ export default function App() {
         <Showreel />
         <WorkGrid />
         <Services />
-        <Channels />
         <About />
         <ContactForm />
       </main>

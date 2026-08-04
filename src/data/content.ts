@@ -7,16 +7,17 @@ export const site = {
 export const navLinks = [
   { label: "Work", href: "#work" },
   { label: "Services", href: "#services" },
-  { label: "Channels", href: "#channels" },
+  { label: "About", href: "#about" },
 ] as const;
 
-// Hero portrait. Drop a real image in public/ and set `src` (e.g. "/thomas.jpg")
-// to replace the placeholder frame — `alt` is already written for it.
+// Hero portrait, presented inside a viewfinder frame.
+// With no `src` the frame stands empty on purpose — framing marks and thirds
+// guides, no "coming soon" copy on the first screen.
+// `meta` is the optional slate line beneath the photo; set it only if true.
 export const heroPortrait = {
-  src: null as string | null,
-  alt: "Thomas Meiss on location, shooting with a cinema camera",
-  placeholderTitle: "Thomas Meiss",
-  placeholderNote: "Portrait coming soon",
+  src: "/action-shot.webp" as string | null,
+  alt: "Thomas Meiss on location, shooting with a Sony mirrorless",
+  meta: null as string | null, // e.g. "FX6 · 50mm · Lawrence, KS"
 } as const;
 
 export const showreel = {
@@ -103,26 +104,15 @@ export const services = [
   },
 ] as const;
 
-// Followers / film counts below are placeholders — replace with real numbers.
+// No follower or film counts here on purpose — the work in Selected Work is the
+// argument, and vanity metrics on a page selling services invite a fact-check.
+// Add a channel only when there is a real profile behind it.
 export const channels = [
   {
     name: "Vimeo",
-    films: "40+",
-    followers: "1.2k",
+    handle: "@thomas-meiss",
     href: "https://vimeo.com/thomasmeiss",
   },
-  {
-    name: "YouTube",
-    films: "25+",
-    followers: "800",
-    href: "https://youtube.com/",
-  },
-] as const;
-
-export const stats = [
-  { value: "3+", label: "Years" },
-  { value: "63k", label: "Audience" },
-  { value: "6", label: "Sports" },
 ] as const;
 
 // No fixed tiers — every project is scoped individually. Copy for the merged
