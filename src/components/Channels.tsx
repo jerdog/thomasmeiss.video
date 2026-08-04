@@ -38,7 +38,7 @@ export function Channels() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`Open ${channel.name} channel (opens in new tab)`}
-                className="mt-8 inline-block text-sm"
+                className="mt-8 inline-flex min-h-11 items-center text-sm"
               >
                 Open channel →
               </AnimatedLink>
