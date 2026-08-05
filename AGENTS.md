@@ -77,6 +77,15 @@ Utilities: `.texture-diagonal`, `.glow-ember`, `.link-underline`, `.animate-marq
 - `env.EMAIL.send({ to: env.CONTACT_TO, from, replyTo, subject, html, text })`
 - Returns `{ ok: true }` or `{ ok: false, error }`
 
+**`CONTACT_TO` must be a verified Destination Address, not a routing rule.**
+Email Routing (inbound) and Email Sending (outbound) are separate systems that
+share a dashboard. A custom address like `contact@thomasmeiss.video` lives under
+**Routes** and forwards to a real inbox — it is never a valid send target, and
+using one fails at runtime with `destination address is not a verified address`
+while the dashboard looks correct. Send to whatever is listed under **Email
+Routing → Destination Addresses** with a verified timestamp. Onboarding the
+domain for Email Sending removes this restriction.
+
 ### Skills to consult
 
 - `wrangler`, `workers-best-practices`, `cloudflare-email-service` (Cloudflare plugin or `~/.claude/skills/`)

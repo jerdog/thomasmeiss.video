@@ -13,7 +13,16 @@
   "send_email": [
     {
       "name": "EMAIL",
-      "allowed_destination_addresses": ["contact@thomasmeiss.video"],
+      // No allowed_destination_addresses: the binding is unrestricted and
+      // Cloudflare's own check is the gate — CONTACT_TO must be a VERIFIED
+      // DESTINATION ADDRESS (Email Routing → Destination Addresses), not a
+      // routing rule. contact@thomasmeiss.video is only a Route that forwards
+      // to the verified inbox, which is why sending to it failed with
+      // "destination address is not a verified address".
+      //
+      // If thomasmeiss.video is ever onboarded as a sending domain, that check
+      // disappears and any recipient becomes reachable — add an explicit
+      // allow-list here at that point.
       // Set remote: true after wrangler login to send real emails in dev
     }
   ],
