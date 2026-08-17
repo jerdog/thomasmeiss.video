@@ -26,10 +26,33 @@
       // Set remote: true after wrangler login to send real emails in dev
     }
   ],
+  // Analytics + contact submissions for the /admin dashboard.
+  // Create once, then paste the id below:
+  //   npx wrangler d1 create thomasmeiss-video
+  //   npx wrangler d1 migrations apply thomasmeiss-video --local
+  //   npx wrangler d1 migrations apply thomasmeiss-video --remote
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "thomasmeiss-video",
+      "database_id": "DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // Daily prune of pageviews past ANALYTICS_RETENTION_DAYS (default 400).
+  "triggers": {
+    "crons": ["23 4 * * *"]
+  },
   // "vars": {
   //   "CONTACT_FROM": "hello@thomasmeiss.video",
   //   "CONTACT_FROM_NAME": "Thomas Meiss Video",
-  //   "CONTACT_TO": "CONTACT_TO@example.com"
+  //   "CONTACT_TO": "CONTACT_TO@example.com",
+  //   // Admin dashboard — see README "Admin dashboard". Set these in the
+  //   // dashboard (keep_vars: true keeps them across deploys); ANALYTICS_SALT
+  //   // is a secret, not a var.
+  //   "CF_ACCESS_TEAM_DOMAIN": "your-team.cloudflareaccess.com",
+  //   "CF_ACCESS_AUD": "the Access application audience tag",
+  //   "ADMIN_EMAILS": "you@example.com"
   // },
     "observability": {
       "enabled": false,

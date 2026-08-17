@@ -14,7 +14,9 @@ Single-page portfolio for **Thomas Meiss Video** at **thomasmeiss.video**. Noir 
 | Framework | **Vite + React 19 + TypeScript + Tailwind v4** | SPA with minimal JS; Tailwind v4 via `@tailwindcss/vite` |
 | API | **Worker at `/api/contact` only** | `run_worker_first: ["/api/*"]` — assets-first for cost/performance |
 | Email | **Cloudflare Email Service** (`send_email` binding) | Outbound from Worker; Email Routing verifies destination inbox |
-| Analytics | **Cloudflare Web Analytics** | Dashboard setup post-deploy; no third-party cookie banner |
+| Analytics | **First-party beacon → D1 → `/admin`** | Owned data, conversion tracking; cookie-free so no consent banner. Cloudflare Web Analytics may run alongside for Web Vitals |
+| Admin auth | **Cloudflare Access** + Worker-side JWT verification | Edge SSO with no passwords in the app; the Worker never trusts the header alone |
+| Storage | **Cloudflare D1** (`DB` binding) | Pageviews + contact submissions; schema in `migrations/` |
 | Env vars | **`keep_vars: true`** + dashboard Variables | Production secrets/vars managed in Workers dashboard; local via `.dev.vars` |
 | Scaffold | **Manual** (not create-cloudflare) | Folder name `thomasmeiss.video` breaks C3 project naming |
 | Content | **`src/data/content.ts`** | Single source for copy and links — not inline in components |
@@ -25,8 +27,14 @@ Single-page portfolio for **Thomas Meiss Video** at **thomasmeiss.video**. Noir 
 ## Repository layout
 
 ```
-worker/index.ts          Contact API only
+worker/index.ts          Route table + scheduled prune; handlers live in routes/
+worker/routes/           contact.ts, collect.ts, admin.ts
+worker/lib/              access.ts (Access JWT), db.ts, visitor.ts, http.ts
+migrations/              D1 schema — never edit an applied migration, add a new one
+src/main.tsx             Public site, or the lazy /admin bundle by pathname
 src/App.tsx              Composes sections in order; skip link to #main
+src/admin/               Dashboard app — not imported by the public site
+src/lib/analytics.ts     Pageview beacon
 src/data/content.ts      All site copy and structured data
 src/index.css            @theme tokens, textures, reduced-motion, scroll-margin
 src/components/          One file per section + ui/ primitives
@@ -126,23 +134,54 @@ Run manual keyboard pass after nav/form changes.
 
 ### Adding Worker routes
 
-- Extend `worker/index.ts`; add path to `run_worker_first` if not under `/api/*`
+- Add a handler in `worker/routes/` and register it in `worker/index.ts`; add the
+  path to `run_worker_first` if it is not under `/api/*`
 - Regenerate types after wrangler.jsonc changes
+
+## Admin dashboard (`/admin`)
+
+Private analytics + contact-inbox dashboard. Setup steps are in the README.
+
+**Security model — do not weaken:**
+
+- Cloudflare Access guards `/admin` **and** `/api/admin` at the edge; the Worker
+  re-verifies the `Cf-Access-Jwt-Assertion` JWT (signature against the team JWKS,
+  `aud`, `iss`, `exp`/`nbf`, email allow-list) on every admin request.
+  Never accept an Access header without verifying it.
+- Missing config, bad signature, or wrong audience → **401**. Fail closed, always.
+- Mutations require a same-origin `Origin` header — the Access session is a cookie.
+- `ADMIN_DEV_BYPASS_EMAIL` is a `.dev.vars`-only switch. Never document it as a
+  production variable, never reference it outside `worker/lib/access.ts`.
+
+**Privacy model — do not weaken:** no cookies, no local storage, no stored IP or
+user-agent string. `visitor_hash` is `SHA-256(salt | UTC day | IP | UA)`, so it
+rotates daily. Anything that would make a visitor identifiable across days (a
+persistent id, a cookie, storing the raw IP) needs a consent banner and is a
+product decision, not a refactor.
+
+**Charts** (`src/admin/components/`) are hand-rolled inline SVG — no chart
+library. Series colours are `--color-chart-views` / `--color-chart-visitors`,
+validated for contrast and colour-vision deficiency against the `--color-surface`
+card. If either token or the card colour changes, re-validate the pair rather
+than eyeballing it. Every chart keeps a legend (2+ series), a table view or
+`aria-label` summary, and hover *and* keyboard access to values.
 
 ## Out of scope (unless requested)
 
-- Multi-page routing / React Router
+- Multi-page routing / React Router (the `/admin` split in `main.tsx` is a
+  pathname check, not a router — keep it that way)
 - CMS / headless backend
 - Real showreel embed (placeholder until media provided)
 - Cloudflare Turnstile (honeypot only for now)
-- Netlify, Auth0, database (D1/Prisma)
+- Netlify, Auth0, ORMs (D1 is used directly via prepared statements)
 
 ## Future scope (see docs/plan.md)
 
 - Blog (markdown in repo or CMS + routing)
 - CMS for non-dev content edits
 - Multi-page routes for project detail pages
-- Custom conversion analytics (Workers Analytics Engine)
+- Email/push digest of new inquiries (the data is already in D1)
+- Workers Analytics Engine if pageview volume outgrows D1's write budget
 
 ## Reference
 

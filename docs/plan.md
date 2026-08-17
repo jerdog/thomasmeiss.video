@@ -30,7 +30,13 @@ todos:
     content: Verify vite build + wrangler deploy; attach custom domain thomasmeiss.video
     status: pending
   - id: analytics
-    content: Enable Cloudflare Web Analytics for thomasmeiss.video (dashboard and/or beacon snippet in index.html)
+    content: First-party analytics — /api/collect beacon writing pageviews to D1, surfaced in the /admin dashboard (Cloudflare Web Analytics optional alongside for Web Vitals)
+    status: completed
+  - id: admin-dashboard
+    content: Admin dashboard at /admin — Cloudflare Access + Worker-side JWT verification, analytics views, and contact-submission tracking backed by D1
+    status: completed
+  - id: admin-cloudflare-setup
+    content: "Post-deploy setup - wrangler d1 create (paste database_id), apply migrations remotely, create the Access application for /admin + /api/admin, set CF_ACCESS_TEAM_DOMAIN / CF_ACCESS_AUD / ADMIN_EMAILS vars and the ANALYTICS_SALT secret"
     status: pending
   - id: build-local
     content: "npm run build passes; npm run dev serves at localhost:5173 (manual scaffold — create-cloudflare failed due to dotted folder name)"
@@ -58,7 +64,9 @@ isProject: false
 | Motion + a11y + SEO | Done | `motion` reveals, reduced-motion hook, skip link, form labels, meta/OG, `robots.txt` |
 | Build / local dev | Done | `npm run build` passes; `npm run dev` works after removing default `remote: true` |
 | Email setup | **Pending** | `CONTACT_TO@example.com` placeholder still in `wrangler.jsonc` |
-| Analytics | **Pending** | Cloudflare Web Analytics — enable at deploy |
+| Analytics | Done (code) | First-party beacon → D1 → `/admin`; see Analytics section below |
+| Admin dashboard | Done (code) | `/admin` behind Cloudflare Access; analytics + inquiry inbox |
+| Admin Cloudflare setup | **Pending** | D1 `database_id`, remote migrations, Access application, Worker vars + `ANALYTICS_SALT` secret |
 | Deploy + domain | **Pending** | Requires `wrangler login`, email config, `npm run deploy`, custom domain attach |
 
 ---
@@ -69,8 +77,10 @@ isProject: false
 |-------|--------|
 | App | **Vite + React 19 + TypeScript + Tailwind CSS v4** |
 | Motion | **`motion`** for staggered reveals and card hovers |
-| API | **Cloudflare Worker** at `/api/contact` (not optional) |
+| API | **Cloudflare Worker** at `/api/contact`, `/api/collect`, `/api/admin/*` |
 | Email | **Cloudflare Email Service** — `send_email` binding delivers to verified personal inbox |
+| Data | **Cloudflare D1** (`DB`) — pageviews and contact submissions; schema in `migrations/` |
+| Admin auth | **Cloudflare Access** on `/admin` + `/api/admin`, re-verified in the Worker |
 | Hosting | **Cloudflare Workers static assets** via `@cloudflare/vite-plugin` + `wrangler deploy` |
 | Config | [`wrangler.jsonc`](wrangler.jsonc) |
 
@@ -161,7 +171,7 @@ Also available via Cloudflare plugin (same content as `.claude/skills/`): `wrang
 
 - Netlify skills (hosting is Cloudflare Workers)
 - Auth0 / Prisma / Render plugins
-- Durable Objects, Agents SDK, D1 (no database)
+- Durable Objects, Agents SDK (D1 *is* used — analytics + contact submissions)
 - Cloudflare Workers Builds MCP (deploy via `wrangler deploy` locally or CI)
 
 ---
@@ -317,39 +327,77 @@ thomasmeiss.video/
 
 ---
 
-## Analytics — Cloudflare Web Analytics (chosen)
+## Analytics and admin dashboard (implemented)
 
-Privacy-oriented, free analytics hosted on Cloudflare. No third-party cookies; typically no cookie-consent banner required for basic pageview tracking (verify against your jurisdiction).
+Traffic and inquiry data are owned end to end: a first-party beacon writes to
+**Cloudflare D1**, and a private dashboard at **`/admin`** reads it back. That
+replaces the original "enable Cloudflare Web Analytics" plan, which could show
+traffic but not conversions and offered no way to review contact submissions.
+Web Analytics can still be switched on in the dashboard alongside this for Core
+Web Vitals — the two do not conflict.
 
-### Setup (at or after deploy)
+```mermaid
+flowchart TB
+  Visitor["Visitor"]
+  Owner["Owner"]
+  Access["Cloudflare Access"]
+  Worker["worker/index.ts"]
+  D1[("D1: page_views + contact_submissions")]
+  Email["Email Sending → inbox"]
 
-**Option A — Dashboard (recommended if domain is proxied through Cloudflare)**
-
-1. Deploy Worker and attach **thomasmeiss.video** as a custom domain (orange-cloud / proxied).
-2. In dashboard: **Analytics & logs** → **Web Analytics** → **Add a site** → select `thomasmeiss.video`.
-3. Metrics appear in the Web Analytics dashboard (page views, referrers, countries, Core Web Vitals).
-
-No code change required when automatic injection is enabled for the zone.
-
-**Option B — Beacon snippet (explicit / fallback)**
-
-If automatic setup isn’t available, add the tokenized beacon to [`index.html`](index.html) before `</body>`:
-
-```html
-<script
-  defer
-  src="https://static.cloudflareinsights.com/beacon.min.js"
-  data-cf-beacon='{"token": "<WEB_ANALYTICS_TOKEN>"}'
-></script>
+  Visitor -->|"POST /api/collect"| Worker
+  Visitor -->|"POST /api/contact"| Worker
+  Worker --> D1
+  Worker --> Email
+  Owner -->|"/admin"| Access
+  Access -->|"signed JWT"| Worker
+  Worker -->|"aggregates"| Owner
 ```
 
-Token comes from the Web Analytics site setup in the dashboard. Use `defer` to avoid blocking render.
+### What the dashboard shows
 
-### Implementation notes
+| View | Contents |
+|------|----------|
+| **Analytics** | Visitors, page views, inquiries, inquiry rate — each vs the preceding period; traffic over time; inquiries per day; top pages, referrers, countries, devices; ranges of 7 / 30 / 90 / 365 days |
+| **Inquiries** | Every submission, filtered by new / read / archived; message body, country, referrer; reply by email; status changes; delete; a warning when the email notification failed |
 
-- Do **not** commit the beacon token if the repo is public — use an env var at build time or rely on dashboard auto-injection.
-- Web Analytics covers **traffic and performance**, not custom conversion events (e.g. contact-form submits). For that later, consider Workers Analytics Engine or Zaraz — out of scope until needed.
-- Skip loading the beacon in local dev (only inject when `import.meta.env.PROD` or omit from `index.html` until production).
+### Security
+
+Cloudflare Access (Zero Trust) protects `thomasmeiss.video/admin` **and**
+`thomasmeiss.video/api/admin` — both hostnames belong to one Access application.
+The Worker does not trust the injected header: `worker/lib/access.ts` verifies
+the JWT signature against the team JWKS (cached in the isolate, refetched on key
+rotation), then checks `aud`, `iss`, `exp`/`nbf`, and an optional `ADMIN_EMAILS`
+allow-list. Missing configuration, a forged header, or an `alg: none` token all
+return 401 — the design fails closed. Mutating requests additionally require a
+same-origin `Origin`, since the Access session travels in a cookie.
+
+### Privacy
+
+No cookies, no local storage, no third-party script, and no raw IP or
+user-agent string is stored. A visitor is counted through
+`SHA-256(ANALYTICS_SALT | UTC day | IP | user agent)`, truncated — the identifier
+rotates every 24 hours, so it supports "unique visitors today" without allowing
+anyone to be followed across days. Known bots and `/admin` traffic are excluded.
+This is why the site still needs no consent banner.
+
+### Data retention
+
+A daily cron (`23 4 * * *`) deletes `page_views` rows older than
+`ANALYTICS_RETENTION_DAYS` (default 400), keeping the table inside D1's free-tier
+budget. `contact_submissions` rows are never auto-deleted — they are the
+business record, removable only from the dashboard.
+
+### Remaining setup
+
+1. `npx wrangler d1 create thomasmeiss-video` → paste `database_id` into `wrangler.jsonc`
+2. `npm run db:migrate` (local) and `npm run db:migrate:remote` (production)
+3. Create the Access application and policy; copy the AUD tag and team domain
+4. Set `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `ADMIN_EMAILS` as Worker variables
+5. `npx wrangler secret put ANALYTICS_SALT`
+6. Give the deploy token **D1:Edit** alongside Workers Scripts:Edit
+
+Full walkthrough in [`README.md`](../README.md#admin-dashboard).
 
 ---
 

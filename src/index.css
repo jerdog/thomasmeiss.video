@@ -11,6 +11,12 @@
   --color-border-strong: oklch(1 0 0 / 0.4);
   --font-display: "EB Garamond", serif;
   --font-body: "Manrope", system-ui, sans-serif;
+
+  /* Admin dashboard (/admin). `surface` is the card colour the chart palette was
+     validated against — changing it means re-running the palette validator. */
+  --color-surface: #2d3438;
+  --color-chart-views: #3899e2;
+  --color-chart-visitors: #ce7c22;
 }
 
 @layer base {

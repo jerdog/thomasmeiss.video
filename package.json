@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "deploy": "./scripts/deploy.sh",
     "preview": "vite preview",
-    "types": "wrangler types"
+    "types": "wrangler types",
+    "db:migrate": "wrangler d1 migrations apply thomasmeiss-video --local",
+    "db:migrate:remote": "wrangler d1 migrations apply thomasmeiss-video --remote"
   },
   "dependencies": {
     "motion": "^12.23.12",

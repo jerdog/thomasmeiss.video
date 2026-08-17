@@ -3,9 +3,31 @@ CONTACT_FROM=hello@thomasmeiss.video
 CONTACT_FROM_NAME=Thomas Meiss Video
 CONTACT_TO=contact@thomasmeiss.video
 
+# --- Admin dashboard (/admin) -------------------------------------------------
+# Cloudflare Access guards /admin and /api/admin at the edge; the Worker
+# re-verifies the signed assertion on every admin API call. Both values come
+# from the Access application (Zero Trust → Access → Applications).
+CF_ACCESS_TEAM_DOMAIN=your-team.cloudflareaccess.com
+CF_ACCESS_AUD=your-access-application-audience-tag
+
+# Optional second gate on top of the Access policy. Comma-separated; empty means
+# "whoever the Access policy admits".
+ADMIN_EMAILS=you@example.com
+
+# Salt for the daily-rotating visitor hash. Set it as a SECRET in production:
+#   npx wrangler secret put ANALYTICS_SALT
+ANALYTICS_SALT=any-long-random-string
+
+# Days of pageview history the daily cron keeps (default 400).
+ANALYTICS_RETENTION_DAYS=400
+
+# LOCAL DEV ONLY — skips Access verification entirely and treats every admin
+# request as this user. Never set this in the Cloudflare dashboard.
+ADMIN_DEV_BYPASS_EMAIL=you@example.com
+
 # Deploy credentials — used only by scripts/deploy.sh, never uploaded to the
 # Worker. Pins the target account so deploys don't follow `wrangler login`
 # state on a machine with multiple Cloudflare accounts.
-# Token needs Workers Scripts:Edit (plus Workers R2/KV etc. if bindings grow).
+# Token needs Workers Scripts:Edit and D1:Edit (plus R2/KV etc. if bindings grow).
 CLOUDFLARE_ACCOUNT_ID=your-account-id
 CLOUDFLARE_API_TOKEN=your-api-token
