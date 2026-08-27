@@ -1,72 +1,83 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "thomasmeiss-video",
-  "main": "worker/index.ts",
-  "compatibility_date": "2026-06-29",
-  "compatibility_flags": ["nodejs_compat"],
-  "preview_urls": true,
-  "keep_vars": true,
-  "assets": {
-    "not_found_handling": "single-page-application",
-    "run_worker_first": ["/api/*"]
-  },
-  "send_email": [
-    {
-      "name": "EMAIL",
-      // No allowed_destination_addresses: the binding is unrestricted and
-      // Cloudflare's own check is the gate — CONTACT_TO must be a VERIFIED
-      // DESTINATION ADDRESS (Email Routing → Destination Addresses), not a
-      // routing rule. contact@thomasmeiss.video is only a Route that forwards
-      // to the verified inbox, which is why sending to it failed with
-      // "destination address is not a verified address".
-      //
-      // If thomasmeiss.video is ever onboarded as a sending domain, that check
-      // disappears and any recipient becomes reachable — add an explicit
-      // allow-list here at that point.
-      // Set remote: true after wrangler login to send real emails in dev
-    }
-  ],
-  // Analytics + contact submissions for the /admin dashboard.
-  // Create once, then paste the id below:
-  //   npx wrangler d1 create thomasmeiss-video
-  //   npx wrangler d1 migrations apply thomasmeiss-video --local
-  //   npx wrangler d1 migrations apply thomasmeiss-video --remote
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "thomasmeiss-video",
-      "database_id": "DATABASE_ID",
-      "migrations_dir": "migrations"
-    }
-  ],
-  // Daily prune of pageviews past ANALYTICS_RETENTION_DAYS (default 400).
-  "triggers": {
-    "crons": ["23 4 * * *"]
-  },
-  // "vars": {
-  //   "CONTACT_FROM": "hello@thomasmeiss.video",
-  //   "CONTACT_FROM_NAME": "Thomas Meiss Video",
-  //   "CONTACT_TO": "CONTACT_TO@example.com",
-  //   // Admin dashboard — see README "Admin dashboard". Set these in the
-  //   // dashboard (keep_vars: true keeps them across deploys); ANALYTICS_SALT
-  //   // is a secret, not a var.
-  //   "CF_ACCESS_TEAM_DOMAIN": "your-team.cloudflareaccess.com",
-  //   "CF_ACCESS_AUD": "the Access application audience tag",
-  //   "ADMIN_EMAILS": "you@example.com"
-  // },
-    "observability": {
-      "enabled": false,
-      "head_sampling_rate": 1,
-      "logs": {
-        "enabled": true,
-        "head_sampling_rate": 1,
-        "persist": true,
-        "invocation_logs": true
-      },
-      "traces": {
-        "enabled": true,
-        "persist": true,
-        "head_sampling_rate": 1
-      }
-    }
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "thomasmeiss-video",
+	"main": "worker/index.ts",
+	"compatibility_date": "2026-06-29",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"preview_urls": true,
+	"keep_vars": true,
+	"assets": {
+		"not_found_handling": "single-page-application",
+		"run_worker_first": [
+			"/api/*"
+		]
+	},
+	"send_email": [
+		{
+			"name": "EMAIL",
+			// No allowed_destination_addresses: the binding is unrestricted and
+			// Cloudflare's own check is the gate — CONTACT_TO must be a VERIFIED
+			// DESTINATION ADDRESS (Email Routing → Destination Addresses), not a
+			// routing rule. contact@thomasmeiss.video is only a Route that forwards
+			// to the verified inbox, which is why sending to it failed with
+			// "destination address is not a verified address".
+			//
+			// If thomasmeiss.video is ever onboarded as a sending domain, that check
+			// disappears and any recipient becomes reachable — add an explicit
+			// allow-list here at that point.
+			// Set remote: true after wrangler login to send real emails in dev
+		}
+	],
+	// Analytics + contact submissions for the /admin dashboard.
+	// Create once, then paste the id below:
+	//   npx wrangler d1 create thomasmeiss-video
+	//   npx wrangler d1 migrations apply thomasmeiss-video --local
+	//   npx wrangler d1 migrations apply thomasmeiss-video --remote
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "thomasmeiss-video",
+			"database_id": "d45cb960-ac28-4e02-99a2-79aa04116168",
+			"migrations_dir": "migrations"
+		}
+		// {
+		// 	"binding": "thomasmeiss_video",
+		// 	"database_name": "thomasmeiss-video",
+		// 	"database_id": "d45cb960-ac28-4e02-99a2-79aa04116168"
+		// }
+	],
+	// Daily prune of pageviews past ANALYTICS_RETENTION_DAYS (default 400).
+	"triggers": {
+		"crons": [
+			"23 4 * * *"
+		]
+	},
+	// "vars": {
+	//   "CONTACT_FROM": "hello@thomasmeiss.video",
+	//   "CONTACT_FROM_NAME": "Thomas Meiss Video",
+	//   "CONTACT_TO": "CONTACT_TO@example.com",
+	//   // Admin dashboard — see README "Admin dashboard". Set these in the
+	//   // dashboard (keep_vars: true keeps them across deploys); ANALYTICS_SALT
+	//   // is a secret, not a var.
+	//   "CF_ACCESS_TEAM_DOMAIN": "your-team.cloudflareaccess.com",
+	//   "CF_ACCESS_AUD": "the Access application audience tag",
+	//   "ADMIN_EMAILS": "you@example.com"
+	// },
+	"observability": {
+		"enabled": false,
+		"head_sampling_rate": 1,
+		"logs": {
+			"enabled": true,
+			"head_sampling_rate": 1,
+			"persist": true,
+			"invocation_logs": true
+		},
+		"traces": {
+			"enabled": true,
+			"persist": true,
+			"head_sampling_rate": 1
+		}
+	}
 }
