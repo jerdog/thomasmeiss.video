@@ -185,18 +185,23 @@ for inspection. Re-running is idempotent. Delete the API token afterwards — it
 is only needed for the import and is never uploaded to the Worker.
 
 Apply the migrations to the **remote** database before importing, or the run
-ends with "the imported_daily table does not exist" — the generated SQL is kept,
-so it can be applied directly afterwards without re-fetching:
+ends with "the imported_daily table does not exist". The fetched data is kept in
+`imported-web-analytics.sql`, so retry the write on its own rather than
+re-fetching ninety days:
 
 ```bash
-npx wrangler d1 execute thomasmeiss-video --remote --file=imported-web-analytics.sql --yes
+npm run analytics:import -- --apply-only
 ```
 
-The generated SQL deliberately contains no `BEGIN`/`COMMIT`. Remote D1 rejects
-explicit transaction statements even though the local dev database accepts them,
-so a file that applies with `--local` can still fail with `--remote`. Every
-statement is `INSERT OR REPLACE` keyed on the full dimension tuple, so a partial
-run is corrected by running it again.
+Use that rather than pointing wrangler at the file by hand: it strips anything
+remote D1 will not accept first. The generated SQL deliberately contains no
+`BEGIN`/`COMMIT` — remote D1 rejects explicit transaction statements even though
+the local dev database accepts them silently, so a file that applies with
+`--local` can still fail with `--remote`, and a stale file from an older run
+will fail the same way every time (wrangler caches uploads by content hash, so
+the giveaway is "File already uploaded. Processing."). Every statement is
+`INSERT OR REPLACE` keyed on the full dimension tuple, so a partial run is
+corrected by running it again.
 
 Imported data is deliberately **not** merged into `page_views`:
 
