@@ -203,11 +203,19 @@ If the importer cannot find the site or the dataset, it says what it *did* find
 and takes `--site-tag=<tag>` or `--dataset=<name>` to override. `--debug` echoes
 the raw API responses.
 
-It works out the query rather than assuming it. The token is verified first, so
-a permissions problem is reported as one. It then walks the GraphQL schema from
-the root to find the account type, dataset and dimension names; if the endpoint
-will not describe itself, it falls back to the conventional names instead of
-giving up. Either way it proves the query against a single day first and drops
+It works out the query rather than assuming it, and walks the GraphQL schema
+from the root to find the account type, dataset and dimension names; if the
+endpoint will not describe itself, it falls back to the conventional names
+instead of giving up.
+
+Only the GraphQL call decides whether the credential is good. The
+`/user/tokens/verify` check is advisory, because it validates *user-owned*
+tokens only and rejects a perfectly good account-owned token with the same
+"Invalid API Token" as a bad one. On a real auth failure the error prints the
+token's length and masked value as read from `.dev.vars`, which distinguishes a
+permissions problem from the Global API Key pasted by mistake, or a stale line
+left above the new one — note that the **last** assignment of a key in
+`.dev.vars` wins, matching `deploy.sh`. Either way it proves the query against a single day first and drops
 whatever the API rejects — so a renamed dimension costs one retry and a slightly
 thinner import rather than a failed run. Daily totals, which are what the chart
 needs, survive all of it.

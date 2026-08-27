@@ -63,16 +63,21 @@ const DIMENSION_CANDIDATES = {
 
 const args = parseArgs(process.argv.slice(2));
 
+/** Set once credentials are read, so auth errors can name the account. */
+let accountIdInUse = "";
+
 main().catch((err) => {
   fail(err instanceof Error ? err.message : String(err));
 });
 
 async function main() {
   const { accountId, token } = readCredentials();
+  accountIdInUse = accountId;
   const { from, to } = dateRange(args.days);
 
   info(`Account ${accountId}`);
   info(`Range   ${from} → ${to} (${args.days} days)`);
+  info(`Token   ${describeSecret(token)}`);
   if (API_BASE !== "https://api.cloudflare.com/client/v4") {
     warn(`Using API base override: ${API_BASE}`);
   }
@@ -122,8 +127,12 @@ async function api(path, token) {
   });
   const body = await res.json().catch(() => null);
   if (!res.ok || body?.success === false) {
+    const hint =
+      res.status === 401 || res.status === 403
+        ? `\n  Token read from .dev.vars: ${describeSecret(token)}`
+        : "";
     throw new Error(
-      `GET ${path} failed (${res.status}): ${JSON.stringify(body?.errors ?? body)}`,
+      `GET ${path} failed (${res.status}): ${JSON.stringify(body?.errors ?? body)}${hint}`,
     );
   }
   return body.result;
@@ -151,6 +160,25 @@ async function graphql(token, query, variables) {
     if (args.debug) {
       warn(`GraphQL ${res.status} ← ${JSON.stringify(body).slice(0, 800)}`);
     }
+
+    // The GraphQL endpoint is the authority on the credential, so this is where
+    // an auth failure is diagnosed rather than guessed at earlier.
+    if (res.status === 401 || res.status === 403) {
+      throw fatalError(
+        `Cloudflare rejected the credential (${res.status}): ` +
+          `${JSON.stringify(body?.errors ?? body)}\n` +
+          `  Token read from .dev.vars: ${describeSecret(token)}\n` +
+          `  Check, in order:\n` +
+          `   1. The value above matches the token you created — a stale line left\n` +
+          `      above the new one in .dev.vars is the usual cause.\n` +
+          `   2. It is an API Token, not the Global API Key (which needs different\n` +
+          `      headers entirely and will always fail here).\n` +
+          `   3. The token grants Account · Account Analytics · Read on account\n` +
+          `      ${accountIdInUse || "(the one in .dev.vars)"}, and is not IP- or\n` +
+          `      TTL-restricted.`,
+      );
+    }
+
     if (!res.ok) throw new Error(`GraphQL HTTP ${res.status}: ${JSON.stringify(body)}`);
     if (body?.errors?.length) {
       throw new Error(`GraphQL error: ${body.errors.map((e) => e.message).join("; ")}`);
@@ -188,8 +216,14 @@ async function discoverSiteTag(accountId, token) {
 }
 
 /**
- * Confirm the token works before anything else, so a permissions problem is
- * reported as one instead of surfacing later as an empty schema.
+ * Advisory token check — never fatal.
+ *
+ * `/user/tokens/verify` only validates *user-owned* tokens: an account-owned
+ * token is rejected there with the same "Invalid API Token" as a genuinely bad
+ * one, even though it works perfectly against the endpoint we actually need.
+ * Failing the run on this call therefore blocks tokens that are fine. The
+ * GraphQL request is the only authority on whether the token works, so this
+ * reports what it saw and gets out of the way.
  */
 async function verifyToken(token) {
   let res;
@@ -198,23 +232,22 @@ async function verifyToken(token) {
       headers: { Authorization: `Bearer ${token}` },
     });
   } catch (err) {
-    throw new Error(`Could not reach ${API_BASE}: ${err.message}`);
+    warn(`Could not reach ${API_BASE} to check the token: ${err.message}`);
+    return;
   }
 
-  if (res.status === 401 || res.status === 403 || res.status === 400) {
+  if (res.ok) {
     const body = await res.json().catch(() => null);
-    throw new Error(
-      `The API token was rejected (${res.status}): ${JSON.stringify(body?.errors ?? body)}\n` +
-        `Create one at dash.cloudflare.com → My Profile → API Tokens with\n` +
-        `permission Account · Account Analytics · Read, and put it in .dev.vars\n` +
-        `as CF_ANALYTICS_API_TOKEN.`,
-    );
+    const status = body?.result?.status;
+    if (status && status !== "active") warn(`Token status is "${status}", not "active".`);
+    return;
   }
 
-  // Any other status (including 404 against a stand-in API) is not conclusive.
-  const body = await res.json().catch(() => null);
-  const status = body?.result?.status;
-  if (status && status !== "active") warn(`Token status is "${status}", not "active".`);
+  warn(
+    `Token check returned ${res.status}. That is expected for an account-owned ` +
+      `token, which this endpoint cannot verify — continuing, since the GraphQL ` +
+      `call is what actually matters.`,
+  );
 }
 
 /** Unwrap NON_NULL / LIST wrappers to the underlying named type. */
@@ -354,6 +387,9 @@ async function negotiatePlan(token, accountId, siteTag, plan, day) {
       await fetchDay(token, accountId, siteTag, current, day);
       return current;
     } catch (err) {
+      // A rejected credential is not a query-shape problem; dropping fields
+      // would only bury the real message under misleading retries.
+      if (err.fatal) throw err;
       const dropped = dropRejectedField(current, err.message);
       if (!dropped) throw err;
       warn(`Query rejected, retrying without ${dropped}.`);
@@ -577,13 +613,8 @@ function readCredentials() {
     fail(".dev.vars not found — copy .dev.vars-example and fill it in.");
   }
 
-  const read = (key) => {
-    const match = new RegExp(`^\\s*${key}\\s*=\\s*(.*)$`, "m").exec(raw);
-    return match ? match[1].trim().replace(/^["']|["']$/g, "") : "";
-  };
-
-  const accountId = read("CLOUDFLARE_ACCOUNT_ID");
-  const token = read("CF_ANALYTICS_API_TOKEN");
+  const accountId = readVar(raw, "CLOUDFLARE_ACCOUNT_ID");
+  const token = readVar(raw, "CF_ANALYTICS_API_TOKEN");
 
   if (!accountId) fail("CLOUDFLARE_ACCOUNT_ID is missing from .dev.vars");
   if (!token) {
@@ -594,6 +625,45 @@ function readCredentials() {
     );
   }
   return { accountId, token };
+}
+
+/**
+ * Read one key from the dotenv-style file.
+ *
+ * The LAST non-empty assignment wins, matching scripts/deploy.sh. That matters:
+ * appending a replacement token below an old one is the obvious way to swap it,
+ * and taking the first would silently keep using the stale value.
+ */
+function readVar(raw, key) {
+  const matches = [...raw.matchAll(new RegExp(`^[ \\t]*${key}[ \\t]*=(.*)$`, "gm"))];
+  const values = matches
+    .map((match) => match[1].trim().replace(/^(["'])(.*)\1$/, "$2").trim())
+    .filter(Boolean);
+
+  if (values.length > 1) {
+    warn(`.dev.vars assigns ${key} ${values.length} times — using the last one.`);
+  }
+  return values[values.length - 1] ?? "";
+}
+
+/**
+ * Describe a secret without printing it, so a value mangled on its way out of
+ * .dev.vars (stray quotes, a trailing comment, the wrong credential entirely)
+ * can be identified from the output.
+ */
+function describeSecret(value) {
+  const masked =
+    value.length > 12 ? `${value.slice(0, 4)}…${value.slice(-4)}` : "(too short to mask)";
+  const notes = [];
+
+  if (/\s/.test(value)) notes.push("contains whitespace — quoting or a trailing comment?");
+  if (/["']/.test(value)) notes.push("contains a quote character");
+  if (/^[0-9a-f]+$/.test(value)) {
+    notes.push("all lowercase hex — this looks like a Global API Key, not an API Token");
+  }
+  if (!/^[A-Za-z0-9_.-]+$/.test(value)) notes.push("contains unexpected characters");
+
+  return `${value.length} chars, ${masked}${notes.length ? ` — ${notes.join("; ")}` : ""}`;
 }
 
 /** Accepts both `--days=14` and `--days 14`. */
@@ -685,6 +755,13 @@ function info(message) {
 
 function warn(message) {
   console.warn(`\x1b[33mwarning:\x1b[0m ${message}`);
+}
+
+/** An error no amount of simplifying the query can fix. */
+function fatalError(message) {
+  const error = new Error(message);
+  error.fatal = true;
+  return error;
 }
 
 function fail(message) {
