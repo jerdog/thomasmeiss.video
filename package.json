@@ -9,6 +9,7 @@
     "deploy": "./scripts/deploy.sh",
     "preview": "vite preview",
     "types": "wrangler types",
+    "analytics:import": "node scripts/import-web-analytics.mjs",
     "db:migrate": "wrangler d1 migrations apply thomasmeiss-video --local",
     "db:migrate:remote": "wrangler d1 migrations apply thomasmeiss-video --remote"
   },

@@ -32,6 +32,7 @@ worker/index.ts          Route table + scheduled prune; handlers live in routes/
 worker/routes/           contact.ts, collect.ts, vitals.ts, admin.ts
 worker/lib/              access.ts (Access JWT), db.ts, visitor.ts, http.ts
 migrations/              D1 schema — never edit an applied migration, add a new one
+scripts/                 deploy.sh; import-web-analytics.mjs (one-off history import)
 src/main.tsx             Public site, or the lazy /admin bundle by pathname
 src/App.tsx              Composes sections in order; skip link to #main
 src/admin/               Dashboard app — not imported by the public site
@@ -164,6 +165,19 @@ send whatever is new at each lifecycle event: metrics are never double-counted.
 listener on `window`, so the flush listeners in `src/lib/analytics.ts` must stay
 bubble-phase and registered after the `on*` calls — reorder them and CLS and INP
 silently vanish.
+
+**Imported history — do not merge into `page_views`.** Pre-launch data from
+Cloudflare Web Analytics lives in `imported_daily` as daily aggregates
+(`scripts/import-web-analytics.mjs`). It is a different instrument measuring a
+different population, and it carries no visitor identity, so folding it into the
+event table would mean inventing rows and corrupting the unique-visitor count on
+both sides of the cutover. The dashboard shows it as a dashed line and keeps the
+tiles, breakdowns and inquiry rate on tracked data only.
+
+Two related rules the chart depends on, both about not drawing a zero where
+there was no measurement: `importedViews` is `null` (not `0`) for a day
+Cloudflare has no record of, and the tracked lines start at `trackingStartDay`
+rather than running along the baseline through days this site could not see.
 
 **Privacy model — do not weaken:** no cookies, no local storage, no stored IP or
 user-agent string. `visitor_hash` is `SHA-256(salt | UTC day | IP | UA)`, so it

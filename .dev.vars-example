@@ -25,6 +25,11 @@ ANALYTICS_RETENTION_DAYS=400
 # request as this user. Never set this in the Cloudflare dashboard.
 ADMIN_DEV_BYPASS_EMAIL=you@example.com
 
+# One-off: importing pre-launch history from Cloudflare Web Analytics.
+# Needs Account · Account Analytics · Read. Used only by
+# scripts/import-web-analytics.mjs — delete the token once the import is done.
+CF_ANALYTICS_API_TOKEN=
+
 # Deploy credentials — used only by scripts/deploy.sh, never uploaded to the
 # Worker. Pins the target account so deploys don't follow `wrangler login`
 # state on a machine with multiple Cloudflare accounts.

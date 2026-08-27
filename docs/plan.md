@@ -38,6 +38,9 @@ todos:
   - id: web-vitals
     content: Web Vitals panel — LCP/INP/CLS plus TTFB/FCP collected with the web-vitals library, stored in D1, reported at p75 against Google's thresholds
     status: completed
+  - id: import-history
+    content: Import pre-launch Cloudflare Web Analytics history into the imported_daily D1 table and show it on the dashboard as a labelled dashed series
+    status: completed
   - id: admin-cloudflare-setup
     content: "Post-deploy setup - wrangler d1 create (paste database_id), apply migrations remotely, create the Access application for /admin + /api/admin, set CF_ACCESS_TEAM_DOMAIN / CF_ACCESS_AUD / ADMIN_EMAILS vars and the ANALYTICS_SALT secret"
     status: pending
@@ -69,6 +72,7 @@ isProject: false
 | Email setup | **Pending** | `CONTACT_TO@example.com` placeholder still in `wrangler.jsonc` |
 | Analytics | Done (code) | First-party beacons → D1 → `/admin`; see Analytics section below |
 | Web Vitals | Done (code) | `web-vitals` → D1, p75 panel on the dashboard; no Cloudflare setup needed |
+| Imported history | Done (code) | `npm run analytics:import` pulls Cloudflare Web Analytics into `imported_daily`; run once with an Analytics:Read token |
 | Admin dashboard | Done (code) | `/admin` behind Cloudflare Access; analytics + inquiry inbox |
 | Admin Cloudflare setup | **Pending** | D1 `database_id`, remote migrations, Access application, Worker vars + `ANALYTICS_SALT` secret |
 | Deploy + domain | **Pending** | Requires `wrangler login`, email config, `npm run deploy`, custom domain attach |
@@ -83,7 +87,7 @@ isProject: false
 | Motion | **`motion`** for staggered reveals and card hovers |
 | API | **Cloudflare Worker** at `/api/contact`, `/api/collect`, `/api/vitals`, `/api/admin/*` |
 | Email | **Cloudflare Email Service** — `send_email` binding delivers to verified personal inbox |
-| Data | **Cloudflare D1** (`DB`) — pageviews, Web Vitals, contact submissions; schema in `migrations/` |
+| Data | **Cloudflare D1** (`DB`) — pageviews, Web Vitals, contact submissions, imported history; schema in `migrations/` |
 | Admin auth | **Cloudflare Access** on `/admin` + `/api/admin`, re-verified in the Worker |
 | Hosting | **Cloudflare Workers static assets** via `@cloudflare/vite-plugin` + `wrangler deploy` |
 | Config | [`wrangler.jsonc`](wrangler.jsonc) |
@@ -394,6 +398,26 @@ enabled as an independent cross-check.
 
 The library is dynamically imported (~3KB gzip in its own chunk, loaded after
 the page is interactive) so the initial bundle is effectively unchanged.
+
+### Imported pre-launch history
+
+Cloudflare Web Analytics ran before this site tracked itself, so that history is
+imported once into `imported_daily` by
+[`scripts/import-web-analytics.mjs`](../scripts/import-web-analytics.mjs) and
+drawn on the dashboard as a dashed line behind the tracked series.
+
+It is kept as aggregates in its own table rather than backfilled into
+`page_views`. Cloudflare returns daily counts rather than events, carries no
+visitor identity to rebuild uniques from, and measures a different population
+than our beacon — merging them would mean inventing per-view rows and would put
+a step change in the visitors line that looks like a traffic event but is an
+artifact of switching instruments. So page views span the whole history, while
+visitors, inquiries and inquiry rate begin at `trackingStartDay`.
+
+The importer discovers Cloudflare's GraphQL schema at runtime — dataset name,
+dimension names, and whether a `visits` metric exists — instead of hard-coding
+field names that vary by account and change over time. It runs as a dry run by
+default and is idempotent, so it can be re-run to extend the range.
 
 ### Privacy
 

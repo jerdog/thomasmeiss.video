@@ -5,6 +5,19 @@ export interface SeriesPoint {
   views: number;
   visitors: number;
   submissions: number;
+  /**
+   * Pre-launch daily views imported from Cloudflare Web Analytics.
+   * `null` means Cloudflare had no record for that day — not a day of zero.
+   */
+  importedViews: number | null;
+}
+
+/** Coverage of the imported history, or null when none has been imported. */
+export interface ImportedSummary {
+  firstDay: string;
+  lastDay: string;
+  views: number;
+  viewsInRange: number;
 }
 
 export interface Bucket {
@@ -34,6 +47,9 @@ export interface Overview {
     devices: Bucket[];
   };
   vitals: VitalsSummary;
+  imported: ImportedSummary | null;
+  /** First day this site tracked itself; before it, zeroes are not measurements. */
+  trackingStartDay: string | null;
 }
 
 export type SubmissionStatus = "new" | "read" | "archived";

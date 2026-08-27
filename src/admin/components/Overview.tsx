@@ -110,7 +110,7 @@ export function Overview({ onUnauthorized }: { onUnauthorized: () => void }) {
           </div>
 
           <div className="mt-6 space-y-6">
-            <TrendChart series={data.series} />
+            <TrendChart series={data.series} trackingStartDay={data.trackingStartDay} />
             <InquiryColumns series={data.series} />
 
             <WebVitals vitals={data.vitals} />

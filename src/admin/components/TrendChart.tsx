@@ -15,28 +15,92 @@ const SERIES = [
  * Traffic over time — two series on one axis (never two scales), 2px lines with
  * a 10% wash under the leading series, a crosshair tooltip on hover or arrow
  * keys, and a table view for anyone who cannot read the marks.
+ *
+ * Pre-launch history imported from Cloudflare rides the same axis as a dashed,
+ * de-emphasised line: it is the same measure (page views) from a different
+ * instrument, so it takes the views hue rather than a third identity colour,
+ * and the dash — not the colour — is what marks it as imported.
  */
-export function TrendChart({ series }: { series: SeriesPoint[] }) {
+export function TrendChart({
+  series,
+  trackingStartDay,
+}: {
+  series: SeriesPoint[];
+  trackingStartDay: string | null;
+}) {
   const [wrapRef, width] = useMeasuredWidth<HTMLDivElement>();
   const [cursor, setCursor] = useState<number | null>(null);
 
+  // Where imported history stops. A plain loop rather than findLastIndex, which
+  // is past this project's ES2022 lib target.
+  let boundary = -1;
+  for (let i = series.length - 1; i >= 0; i--) {
+    if ((series[i].importedViews ?? 0) > 0) {
+      boundary = i;
+      break;
+    }
+  }
+  const hasImported = boundary >= 0;
+
+  // Days before tracking began hold zeroes that were never measured, so the
+  // tracked lines start where the record does rather than running along the
+  // baseline through a period this site could not see.
+  // series.length when no day in range is tracked, so every index compares as
+  // untracked rather than -1 making all of them look tracked.
+  const firstTracked = trackingStartDay
+    ? series.findIndex((point) => point.day >= trackingStartDay)
+    : 0;
+  const trackedFrom = firstTracked < 0 ? series.length : firstTracked;
+  const tracked = series.slice(trackedFrom);
+
   const plotWidth = Math.max(1, width - PAD.left - PAD.right);
   const plotHeight = HEIGHT - PAD.top - PAD.bottom;
-  const max = niceMax(Math.max(...series.flatMap((p) => [p.views, p.visitors]), 0));
+  const max = niceMax(
+    Math.max(
+      ...series.flatMap((p) => [p.views, p.visitors, p.importedViews ?? 0]),
+      0,
+    ),
+  );
 
   const x = (i: number) => xAt(i, series.length, PAD.left, plotWidth);
   const y = (value: number) => PAD.top + plotHeight - (value / max) * plotHeight;
 
   const line = (key: "views" | "visitors") =>
-    series.map((p, i) => `${i === 0 ? "M" : "L"} ${x(i)} ${y(p[key])}`).join(" ");
+    tracked
+      .map((p, i) => `${i === 0 ? "M" : "L"} ${x(i + trackedFrom)} ${y(p[key])}`)
+      .join(" ");
 
-  const area = `${line("views")} L ${x(series.length - 1)} ${PAD.top + plotHeight} L ${x(0)} ${
-    PAD.top + plotHeight
-  } Z`;
+  /**
+   * Imported views, broken into contiguous runs. A day Cloudflare has no record
+   * for is a hole in the record, not a day of zero traffic, so the line stops
+   * rather than dipping to the baseline and back.
+   */
+  const importedSegments: string[] = [];
+  let current: string[] = [];
+  for (const [i, point] of series.entries()) {
+    if (point.importedViews === null || i > boundary) {
+      if (current.length > 1) importedSegments.push(current.join(" "));
+      current = [];
+      continue;
+    }
+    current.push(`${current.length === 0 ? "M" : "L"} ${x(i)} ${y(point.importedViews)}`);
+  }
+  if (current.length > 1) importedSegments.push(current.join(" "));
+
+  const area =
+    tracked.length > 0
+      ? `${line("views")} L ${x(series.length - 1)} ${PAD.top + plotHeight} L ${x(trackedFrom)} ${
+          PAD.top + plotHeight
+        } Z`
+      : "";
 
   const totals = series.reduce(
-    (acc, p) => ({ views: acc.views + p.views, visitors: acc.visitors + p.visitors }),
-    { views: 0, visitors: 0 },
+    (acc, p) => ({
+      views: acc.views + p.views,
+      visitors: acc.visitors + p.visitors,
+      importedViews: acc.importedViews + (p.importedViews ?? 0),
+    }),
+    { views: 0, visitors: 0, importedViews: 0 },
   );
 
   function moveCursor(step: number) {
@@ -56,7 +120,7 @@ export function TrendChart({ series }: { series: SeriesPoint[] }) {
         <h3 className="font-body text-xs uppercase tracking-widest text-bone-muted">
           Traffic over time
         </h3>
-        <ul className="flex gap-4">
+        <ul className="flex flex-wrap gap-4">
           {SERIES.map((s) => (
             <li key={s.key} className="flex items-center gap-2 font-body text-xs text-bone-muted">
               <span
@@ -67,6 +131,23 @@ export function TrendChart({ series }: { series: SeriesPoint[] }) {
               {s.label}
             </li>
           ))}
+          {hasImported && (
+            <li className="flex items-center gap-2 font-body text-xs text-bone-muted">
+              <svg aria-hidden="true" width="16" height="2" className="shrink-0">
+                <line
+                  x1="0"
+                  y1="1"
+                  x2="16"
+                  y2="1"
+                  stroke="var(--color-chart-views)"
+                  strokeWidth="2"
+                  strokeDasharray="4 3"
+                  opacity={0.75}
+                />
+              </svg>
+              Imported
+            </li>
+          )}
         </ul>
       </figcaption>
 
@@ -76,7 +157,11 @@ export function TrendChart({ series }: { series: SeriesPoint[] }) {
           height={HEIGHT}
           role="img"
           tabIndex={0}
-          aria-label={`Page views and visitors per day over ${series.length} days. ${totals.views.toLocaleString()} views from ${totals.visitors.toLocaleString()} visitors in total. Use arrow keys to read individual days, or open the table below.`}
+          aria-label={`Page views and visitors per day over ${series.length} days. ${totals.views.toLocaleString()} views from ${totals.visitors.toLocaleString()} visitors in total.${
+            hasImported
+              ? ` A dashed line covers the earlier days, imported from Cloudflare Web Analytics, totalling ${totals.importedViews.toLocaleString()} views; visitors were not tracked then.`
+              : ""
+          } Use arrow keys to read individual days, or open the table below.`}
           className="touch-none rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           onPointerMove={(e) => {
             const bounds = e.currentTarget.getBoundingClientRect();
@@ -118,6 +203,34 @@ export function TrendChart({ series }: { series: SeriesPoint[] }) {
 
           <path d={area} fill="var(--color-chart-views)" opacity={0.1} />
 
+          {hasImported && (
+            <g>
+              {importedSegments.map((segment) => (
+                <path
+                  key={segment}
+                  d={segment}
+                  fill="none"
+                  stroke="var(--color-chart-views)"
+                  strokeWidth={2}
+                  strokeDasharray="4 3"
+                  strokeLinecap="round"
+                  opacity={0.75}
+                />
+              ))}
+              {boundary < series.length - 1 && (
+                <line
+                  x1={x(boundary)}
+                  x2={x(boundary)}
+                  y1={PAD.top}
+                  y2={PAD.top + plotHeight}
+                  stroke="var(--color-border-strong)"
+                  strokeWidth={1}
+                  strokeDasharray="2 3"
+                />
+              )}
+            </g>
+          )}
+
           {SERIES.map((s) => (
             <path
               key={s.key}
@@ -140,17 +253,29 @@ export function TrendChart({ series }: { series: SeriesPoint[] }) {
                 stroke="var(--color-border-strong)"
                 strokeWidth={1}
               />
-              {SERIES.map((s) => (
+              {cursor >= trackedFrom &&
+                SERIES.map((s) => (
+                  <circle
+                    key={s.key}
+                    cx={x(cursor)}
+                    cy={y(series[cursor][s.key])}
+                    r={4}
+                    fill={s.color}
+                    stroke="var(--color-surface)"
+                    strokeWidth={2}
+                  />
+                ))}
+              {series[cursor].importedViews !== null && cursor <= boundary && (
                 <circle
-                  key={s.key}
                   cx={x(cursor)}
-                  cy={y(series[cursor][s.key])}
+                  cy={y(series[cursor].importedViews ?? 0)}
                   r={4}
-                  fill={s.color}
+                  fill="var(--color-chart-views)"
+                  fillOpacity={0.75}
                   stroke="var(--color-surface)"
                   strokeWidth={2}
                 />
-              ))}
+              )}
             </g>
           )}
 
@@ -182,16 +307,37 @@ export function TrendChart({ series }: { series: SeriesPoint[] }) {
             aria-live="polite"
           >
             <p className="text-bone-muted">{fullDay(active.day)}</p>
-            {SERIES.map((s) => (
-              <p key={s.key} className="mt-1 flex items-center gap-2">
-                <span
-                  aria-hidden="true"
-                  className="inline-block h-0.5 w-3 rounded-full"
-                  style={{ background: s.color }}
-                />
-                {s.label}: <span className="tabular-nums">{active[s.key].toLocaleString()}</span>
+            {cursor! >= trackedFrom ? (
+              SERIES.map((s) => (
+                <p key={s.key} className="mt-1 flex items-center gap-2">
+                  <span
+                    aria-hidden="true"
+                    className="inline-block h-0.5 w-3 rounded-full"
+                    style={{ background: s.color }}
+                  />
+                  {s.label}: <span className="tabular-nums">{active[s.key].toLocaleString()}</span>
+                </p>
+              ))
+            ) : (
+              <p className="mt-1 text-bone-muted">Not tracked yet</p>
+            )}
+            {(active.importedViews ?? 0) > 0 && (
+              <p className="mt-1 flex items-center gap-2">
+                <svg aria-hidden="true" width="12" height="2" className="shrink-0">
+                  <line
+                    x1="0"
+                    y1="1"
+                    x2="12"
+                    y2="1"
+                    stroke="var(--color-chart-views)"
+                    strokeWidth="2"
+                    strokeDasharray="4 3"
+                    opacity={0.75}
+                  />
+                </svg>
+                Imported: <span className="tabular-nums">{active.importedViews?.toLocaleString()}</span>
               </p>
-            ))}
+            )}
             {active.submissions > 0 && (
               <p className="mt-1 text-bone-muted">
                 Inquiries: <span className="tabular-nums">{active.submissions}</span>
@@ -212,24 +358,47 @@ export function TrendChart({ series }: { series: SeriesPoint[] }) {
                 <th scope="col" className="py-1 pr-4 font-normal">Day</th>
                 <th scope="col" className="py-1 pr-4 text-right font-normal">Views</th>
                 <th scope="col" className="py-1 pr-4 text-right font-normal">Visitors</th>
-                <th scope="col" className="py-1 text-right font-normal">Inquiries</th>
+                <th scope="col" className="py-1 pr-4 text-right font-normal">Inquiries</th>
+                {hasImported && (
+                  <th scope="col" className="py-1 text-right font-normal">Imported</th>
+                )}
               </tr>
             </thead>
             <tbody className="text-bone">
-              {series.map((point) => (
+              {series.map((point, i) => (
                 <tr key={point.day} className="border-t border-border/50">
                   <th scope="row" className="py-1 pr-4 text-left font-normal text-bone-muted">
                     {point.day}
                   </th>
-                  <td className="py-1 pr-4 text-right tabular-nums">{point.views}</td>
-                  <td className="py-1 pr-4 text-right tabular-nums">{point.visitors}</td>
-                  <td className="py-1 text-right tabular-nums">{point.submissions}</td>
+                  <td className="py-1 pr-4 text-right tabular-nums">
+                    {i >= trackedFrom ? point.views : "—"}
+                  </td>
+                  <td className="py-1 pr-4 text-right tabular-nums">
+                    {i >= trackedFrom ? point.visitors : "—"}
+                  </td>
+                  <td className="py-1 pr-4 text-right tabular-nums">
+                    {i >= trackedFrom ? point.submissions : "—"}
+                  </td>
+                  {hasImported && (
+                    <td className="py-1 text-right tabular-nums">
+                      {point.importedViews ?? "—"}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </details>
+
+      {hasImported && (
+        <p className="mt-3 border-t border-border pt-3 font-body text-xs leading-relaxed text-bone-muted">
+          The dashed line is daily page views imported from Cloudflare Web Analytics
+          {boundary >= 0 && ` up to ${fullDay(series[boundary].day)}`}, before this site
+          tracked its own. Cloudflare reported daily totals only, so unique visitors and
+          inquiries do not exist for those days — the figures above cover tracked data only.
+        </p>
+      )}
     </figure>
   );
 }

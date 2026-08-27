@@ -77,6 +77,7 @@ async function getOverview(env: Env, url: URL): Promise<Response> {
     viewSeries,
     submissionSeries,
     submissionTotals,
+    trackingStart,
     paths,
     referrers,
     countries,
@@ -107,6 +108,7 @@ async function getOverview(env: Env, url: URL): Promise<Response> {
          COUNT(*) AS total
        FROM contact_submissions`,
     ).bind(from, prevFrom),
+    env.DB.prepare(`SELECT MIN(day) AS day FROM page_views`),
     breakdown(env, "path", from),
     breakdown(env, "referrer_host", from),
     breakdown(env, "country", from),
@@ -117,6 +119,7 @@ async function getOverview(env: Env, url: URL): Promise<Response> {
   const views = num(totals.results[0]?.views);
   const visitors = num(totals.results[0]?.visitors);
   const submissions = num(submissionTotals.results[0]?.current);
+  const imported = await fetchImported(env, utcDay(now - days * 86_400_000));
 
   return json({
     ok: true,
@@ -135,7 +138,27 @@ async function getOverview(env: Env, url: URL): Promise<Response> {
       visitors: num(prevTotals.results[0]?.visitors),
       submissions: num(submissionTotals.results[0]?.previous),
     },
-    series: buildSeries(days, now, viewSeries.results, submissionSeries.results),
+    series: buildSeries(
+      days,
+      now,
+      viewSeries.results,
+      submissionSeries.results,
+      imported?.byDay ?? new Map(),
+    ),
+    // The first day this site tracked itself. Before it, a zero is the absence
+    // of a measurement rather than a measurement of zero, and the dashboard
+    // draws it as such.
+    trackingStartDay: trackingStart.results[0]?.day
+      ? String(trackingStart.results[0].day)
+      : null,
+    imported: imported
+      ? {
+          firstDay: imported.firstDay,
+          lastDay: imported.lastDay,
+          views: imported.views,
+          viewsInRange: [...imported.byDay.values()].reduce((sum, n) => sum + n, 0),
+        }
+      : null,
     breakdowns: {
       paths: toBuckets(paths.results, "path"),
       referrers: toBuckets(referrers.results, "referrer_host", "Direct / none"),
@@ -196,6 +219,49 @@ function toBuckets(
 }
 
 /**
+ * Pre-launch history imported from Cloudflare Web Analytics, if any.
+ *
+ * Isolated in its own try/catch rather than folded into the main batch: the
+ * table arrives with migration 0003, and a Worker deployed ahead of that
+ * migration must degrade to "no imported history" instead of failing every
+ * dashboard request.
+ */
+async function fetchImported(
+  env: Env,
+  fromDay: string,
+): Promise<{
+  byDay: Map<string, number>;
+  firstDay: string | null;
+  lastDay: string | null;
+  views: number;
+} | null> {
+  try {
+    const [inRange, coverage] = await env.DB.batch<Record<string, string | number | null>>([
+      env.DB.prepare(
+        `SELECT day, SUM(views) AS views FROM imported_daily WHERE day >= ? GROUP BY day`,
+      ).bind(fromDay),
+      env.DB.prepare(
+        `SELECT MIN(day) AS first_day, MAX(day) AS last_day, SUM(views) AS views
+           FROM imported_daily`,
+      ),
+    ]);
+
+    const summary = coverage.results[0];
+    if (!summary?.first_day) return null;
+
+    return {
+      byDay: new Map(inRange.results.map((row) => [String(row.day), num(row.views)])),
+      firstDay: String(summary.first_day),
+      lastDay: String(summary.last_day),
+      views: num(summary.views),
+    };
+  } catch (err) {
+    console.warn("Imported analytics unavailable:", err instanceof Error ? err.message : err);
+    return null;
+  }
+}
+
+/**
  * Zero-fill the daily series so the chart has one point per day in the range —
  * a gap in the data must read as a trough, not as a straight line across it.
  */
@@ -204,7 +270,14 @@ function buildSeries(
   nowMs: number,
   viewRows: Record<string, string | number | null>[],
   submissionRows: Record<string, string | number | null>[],
-): { day: string; views: number; visitors: number; submissions: number }[] {
+  importedByDay: Map<string, number>,
+): {
+  day: string;
+  views: number;
+  visitors: number;
+  submissions: number;
+  importedViews: number | null;
+}[] {
   const viewsByDay = new Map(viewRows.map((row) => [String(row.day), row]));
   const submissionsByDay = new Map(
     submissionRows.map((row) => [String(row.day), num(row.submissions)]),
@@ -219,6 +292,9 @@ function buildSeries(
       views: num(row?.views),
       visitors: num(row?.visitors),
       submissions: submissionsByDay.get(day) ?? 0,
+      // null, not 0: Cloudflare returns no row for a day it has nothing for,
+      // and "no record" must not be plotted as a day of zero traffic.
+      importedViews: importedByDay.has(day) ? (importedByDay.get(day) ?? 0) : null,
     });
   }
   return series;

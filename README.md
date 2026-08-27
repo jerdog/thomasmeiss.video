@@ -166,6 +166,44 @@ In **Workers → thomasmeiss-video → Settings → Variables and Secrets**:
 A daily cron (`23 4 * * *`) deletes pageviews past the retention window.
 Contact submissions are never auto-deleted.
 
+### Importing pre-launch history
+
+If Cloudflare Web Analytics was running before this site tracked itself, that
+history can be imported into the `imported_daily` table and shown on the
+dashboard as a dashed line behind the tracked data:
+
+```bash
+# 1. Add a token with Account · Account Analytics · Read to .dev.vars
+#    as CF_ANALYTICS_API_TOKEN
+npm run analytics:import -- --days 90            # dry run: reports what it found
+npm run analytics:import -- --days 90 --apply    # writes to production D1
+```
+
+The dry run prints the dataset and dimensions it discovered, the day range, and
+the totals, and writes the SQL it *would* run to `imported-web-analytics.sql`
+for inspection. Re-running is idempotent. Delete the API token afterwards — it
+is only needed for the import and is never uploaded to the Worker.
+
+Imported data is deliberately **not** merged into `page_views`:
+
+- Cloudflare returns daily aggregates, not events, so per-view rows would have
+  to be invented.
+- There is no visitor identity to recover, so unique visitors cannot be
+  reconstructed. Cloudflare's "visits" is a different metric and is stored under
+  its own name.
+- The two beacons measure different populations, so a spliced series would show
+  a step change at the cutover that looks like a traffic event but is not.
+
+The dashboard therefore draws imported days as a labelled dashed line and leaves
+the KPI tiles, breakdowns and inquiry rate measuring tracked data only. Days
+Cloudflare has no record for break the line rather than plotting as zero, and
+days before tracking began show as "not tracked yet" rather than as zeroes.
+
+If the importer cannot find the site or the dataset, it says what it *did* find
+and takes `--site-tag=<tag>` or `--dataset=<name>` to override. It discovers the
+GraphQL schema at runtime rather than assuming field names, so a schema change
+on Cloudflare's side surfaces as a clear message instead of a failed query.
+
 `/api/collect` is public by necessity (the site itself calls it) and only
 same-origin, non-bot requests are recorded. That bounds accidental noise, not a
 deliberate flood — if one ever shows up, add a Cloudflare **WAF rate-limiting
