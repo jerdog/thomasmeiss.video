@@ -30,10 +30,13 @@ todos:
     content: Verify vite build + wrangler deploy; attach custom domain thomasmeiss.video
     status: pending
   - id: analytics
-    content: First-party analytics — /api/collect beacon writing pageviews to D1, surfaced in the /admin dashboard (Cloudflare Web Analytics optional alongside for Web Vitals)
+    content: First-party analytics — /api/collect beacon writing pageviews to D1, surfaced in the /admin dashboard (Cloudflare Web Analytics optional alongside as a cross-check)
     status: completed
   - id: admin-dashboard
     content: Admin dashboard at /admin — Cloudflare Access + Worker-side JWT verification, analytics views, and contact-submission tracking backed by D1
+    status: completed
+  - id: web-vitals
+    content: Web Vitals panel — LCP/INP/CLS plus TTFB/FCP collected with the web-vitals library, stored in D1, reported at p75 against Google's thresholds
     status: completed
   - id: admin-cloudflare-setup
     content: "Post-deploy setup - wrangler d1 create (paste database_id), apply migrations remotely, create the Access application for /admin + /api/admin, set CF_ACCESS_TEAM_DOMAIN / CF_ACCESS_AUD / ADMIN_EMAILS vars and the ANALYTICS_SALT secret"
@@ -64,7 +67,8 @@ isProject: false
 | Motion + a11y + SEO | Done | `motion` reveals, reduced-motion hook, skip link, form labels, meta/OG, `robots.txt` |
 | Build / local dev | Done | `npm run build` passes; `npm run dev` works after removing default `remote: true` |
 | Email setup | **Pending** | `CONTACT_TO@example.com` placeholder still in `wrangler.jsonc` |
-| Analytics | Done (code) | First-party beacon → D1 → `/admin`; see Analytics section below |
+| Analytics | Done (code) | First-party beacons → D1 → `/admin`; see Analytics section below |
+| Web Vitals | Done (code) | `web-vitals` → D1, p75 panel on the dashboard; no Cloudflare setup needed |
 | Admin dashboard | Done (code) | `/admin` behind Cloudflare Access; analytics + inquiry inbox |
 | Admin Cloudflare setup | **Pending** | D1 `database_id`, remote migrations, Access application, Worker vars + `ANALYTICS_SALT` secret |
 | Deploy + domain | **Pending** | Requires `wrangler login`, email config, `npm run deploy`, custom domain attach |
@@ -77,9 +81,9 @@ isProject: false
 |-------|--------|
 | App | **Vite + React 19 + TypeScript + Tailwind CSS v4** |
 | Motion | **`motion`** for staggered reveals and card hovers |
-| API | **Cloudflare Worker** at `/api/contact`, `/api/collect`, `/api/admin/*` |
+| API | **Cloudflare Worker** at `/api/contact`, `/api/collect`, `/api/vitals`, `/api/admin/*` |
 | Email | **Cloudflare Email Service** — `send_email` binding delivers to verified personal inbox |
-| Data | **Cloudflare D1** (`DB`) — pageviews and contact submissions; schema in `migrations/` |
+| Data | **Cloudflare D1** (`DB`) — pageviews, Web Vitals, contact submissions; schema in `migrations/` |
 | Admin auth | **Cloudflare Access** on `/admin` + `/api/admin`, re-verified in the Worker |
 | Hosting | **Cloudflare Workers static assets** via `@cloudflare/vite-plugin` + `wrangler deploy` |
 | Config | [`wrangler.jsonc`](wrangler.jsonc) |
@@ -342,10 +346,11 @@ flowchart TB
   Owner["Owner"]
   Access["Cloudflare Access"]
   Worker["worker/index.ts"]
-  D1[("D1: page_views + contact_submissions")]
+  D1[("D1: page_views + web_vitals + contact_submissions")]
   Email["Email Sending → inbox"]
 
   Visitor -->|"POST /api/collect"| Worker
+  Visitor -->|"POST /api/vitals"| Worker
   Visitor -->|"POST /api/contact"| Worker
   Worker --> D1
   Worker --> Email
@@ -358,7 +363,7 @@ flowchart TB
 
 | View | Contents |
 |------|----------|
-| **Analytics** | Visitors, page views, inquiries, inquiry rate — each vs the preceding period; traffic over time; inquiries per day; top pages, referrers, countries, devices; ranges of 7 / 30 / 90 / 365 days |
+| **Analytics** | Visitors, page views, inquiries, inquiry rate — each vs the preceding period; traffic over time; inquiries per day; Web Vitals; top pages, referrers, countries, devices; ranges of 7 / 30 / 90 / 365 days |
 | **Inquiries** | Every submission, filtered by new / read / archived; message body, country, referrer; reply by email; status changes; delete; a warning when the email notification failed |
 
 ### Security
@@ -371,6 +376,24 @@ rotation), then checks `aud`, `iss`, `exp`/`nbf`, and an optional `ADMIN_EMAILS`
 allow-list. Missing configuration, a forged header, or an `alg: none` token all
 return 401 — the design fails closed. Mutating requests additionally require a
 same-origin `Origin`, since the Access session travels in a cookie.
+
+### Web Vitals
+
+LCP, INP, CLS (Core Web Vitals) plus TTFB and FCP, measured in visitors'
+browsers with Google's `web-vitals` library and reported at the 75th percentile
+— the percentile Google's thresholds are defined against.
+
+**Why not Cloudflare's RUM data,** which measures the same metrics: reading it
+needs an account-scoped API token stored as a Worker secret, retention on the
+free plan is short (~30 days, so the 90- and 365-day ranges would be empty), and
+its beacon is served from `static.cloudflareinsights.com`, which common ad-block
+lists drop — a material sampling loss on a low-traffic site. Collecting it
+ourselves needs no credential, keeps the same 400-day retention as everything
+else, and answers from the same D1 query. Cloudflare Web Analytics can still be
+enabled as an independent cross-check.
+
+The library is dynamically imported (~3KB gzip in its own chunk, loaded after
+the page is interactive) so the initial bundle is effectively unchanged.
 
 ### Privacy
 

@@ -14,7 +14,8 @@ Single-page portfolio for **Thomas Meiss Video** at **thomasmeiss.video**. Noir 
 | Framework | **Vite + React 19 + TypeScript + Tailwind v4** | SPA with minimal JS; Tailwind v4 via `@tailwindcss/vite` |
 | API | **Worker at `/api/contact` only** | `run_worker_first: ["/api/*"]` — assets-first for cost/performance |
 | Email | **Cloudflare Email Service** (`send_email` binding) | Outbound from Worker; Email Routing verifies destination inbox |
-| Analytics | **First-party beacon → D1 → `/admin`** | Owned data, conversion tracking; cookie-free so no consent banner. Cloudflare Web Analytics may run alongside for Web Vitals |
+| Analytics | **First-party beacons → D1 → `/admin`** | Owned data, conversion tracking, and Web Vitals; cookie-free so no consent banner. Cloudflare Web Analytics may run alongside as a cross-check |
+| Web Vitals | **`web-vitals` library, p75 in D1** | Chosen over Cloudflare's RUM API: no account API token, no ~30-day retention ceiling, not blocked by ad blockers, and one query joins it with everything else |
 | Admin auth | **Cloudflare Access** + Worker-side JWT verification | Edge SSO with no passwords in the app; the Worker never trusts the header alone |
 | Storage | **Cloudflare D1** (`DB` binding) | Pageviews + contact submissions; schema in `migrations/` |
 | Env vars | **`keep_vars: true`** + dashboard Variables | Production secrets/vars managed in Workers dashboard; local via `.dev.vars` |
@@ -28,7 +29,7 @@ Single-page portfolio for **Thomas Meiss Video** at **thomasmeiss.video**. Noir 
 
 ```
 worker/index.ts          Route table + scheduled prune; handlers live in routes/
-worker/routes/           contact.ts, collect.ts, admin.ts
+worker/routes/           contact.ts, collect.ts, vitals.ts, admin.ts
 worker/lib/              access.ts (Access JWT), db.ts, visitor.ts, http.ts
 migrations/              D1 schema — never edit an applied migration, add a new one
 src/main.tsx             Public site, or the lazy /admin bundle by pathname
@@ -153,9 +154,21 @@ Private analytics + contact-inbox dashboard. Setup steps are in the README.
 - `ADMIN_DEV_BYPASS_EMAIL` is a `.dev.vars`-only switch. Never document it as a
   production variable, never reference it outside `worker/lib/access.ts`.
 
+**Web Vitals:** collected by `web-vitals` (dynamically imported, so it stays out
+of the initial bundle) and reported at **p75** — never an average, which hides
+the slow tail the thresholds exist to catch. Each metric is its own nullable
+column, so a visit that reports only some metrics is a partial row and each
+metric's percentile skips NULLs. That is what makes it safe for the client to
+send whatever is new at each lifecycle event: metrics are never double-counted.
+`web-vitals` finalizes CLS and INP from a **capture-phase** `visibilitychange`
+listener on `window`, so the flush listeners in `src/lib/analytics.ts` must stay
+bubble-phase and registered after the `on*` calls — reorder them and CLS and INP
+silently vanish.
+
 **Privacy model — do not weaken:** no cookies, no local storage, no stored IP or
 user-agent string. `visitor_hash` is `SHA-256(salt | UTC day | IP | UA)`, so it
-rotates daily. Anything that would make a visitor identifiable across days (a
+rotates daily. `web_vitals` rows carry no visitor identifier at all — performance
+data needs no notion of who. Anything that would make a visitor identifiable across days (a
 persistent id, a cookie, storing the raw IP) needs a consent banner and is a
 product decision, not a refactor.
 

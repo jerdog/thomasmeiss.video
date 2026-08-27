@@ -1,7 +1,8 @@
-import { prunePageViews } from "./lib/db";
+import { pruneAnalytics } from "./lib/db";
 import { handleAdmin } from "./routes/admin";
 import { handleCollect } from "./routes/collect";
 import { handleContact } from "./routes/contact";
+import { handleVitals } from "./routes/vitals";
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -15,6 +16,10 @@ export default {
       return handleCollect(request, env, ctx);
     }
 
+    if (url.pathname === "/api/vitals") {
+      return handleVitals(request, env, ctx);
+    }
+
     if (url.pathname === "/api/admin" || url.pathname.startsWith("/api/admin/")) {
       return handleAdmin(request, env, url);
     }
@@ -24,9 +29,9 @@ export default {
 
   async scheduled(_event: ScheduledController, env: Env, ctx: ExecutionContext) {
     ctx.waitUntil(
-      prunePageViews(env)
-        .then((deleted) => console.log(`Pruned ${deleted} expired pageviews`))
-        .catch((err) => console.error("Pageview prune failed:", err)),
+      pruneAnalytics(env)
+        .then((deleted) => console.log(`Pruned ${deleted} expired analytics rows`))
+        .catch((err) => console.error("Analytics prune failed:", err)),
     );
   },
 } satisfies ExportedHandler<Env>;

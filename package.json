@@ -15,7 +15,8 @@
   "dependencies": {
     "motion": "^12.23.12",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "web-vitals": "^6.2.1"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.21.2",

@@ -85,7 +85,7 @@ correctly returns 401.
 
 - **Analytics** — visitors, page views, inquiries and inquiry rate for the last
   7 / 30 / 90 / 365 days (each against the preceding period), traffic over time,
-  inquiries per day, and top pages / referrers / countries / devices.
+  inquiries per day, Web Vitals, and top pages / referrers / countries / devices.
 - **Inquiries** — every contact-form submission, filterable by new / read /
   archived, with reply-by-email, status changes, and delete.
 
@@ -97,6 +97,27 @@ Known bots and the `/admin` paths themselves are excluded.
 
 Submissions are written to D1 *and* emailed. If email delivery fails the inquiry
 is still recorded and flagged in the dashboard, so a bounced send never loses a lead.
+
+### Web Vitals
+
+Real-user performance is measured in visitors' browsers with Google's
+[`web-vitals`](https://github.com/GoogleChrome/web-vitals) library and reported
+at the **75th percentile** — the percentile Google's thresholds are defined
+against, and the reason the dashboard shows p75 rather than an average, which
+would hide the slow tail. LCP, INP and CLS are the Core Web Vitals; TTFB and FCP
+are shown as supporting diagnostics.
+
+The library ships as its own lazy chunk (~3KB gzip), loaded after the page is
+interactive, so the initial bundle is effectively unchanged. Metrics arrive at
+different moments — TTFB early, INP and CLS only once the page is hidden — so
+they are buffered and sent in one request as the visitor leaves, rather than one
+request per metric.
+
+Nothing about this needs configuring: it works as soon as the site is deployed.
+Sample counts differ per metric by design (a visitor who never clicks produces
+no INP), and each metric's count is shown beneath it. Enabling Cloudflare Web
+Analytics as well is a reasonable cross-check, since it measures the same
+metrics independently.
 
 ### 1. Create the database
 
@@ -213,10 +234,10 @@ Attach **thomasmeiss.video** (and optionally `www`) to the `thomasmeiss-video` W
 
 ### 5. Analytics
 
-Traffic data comes from the built-in beacon and appears at `/admin` — see
-[Admin dashboard](#admin-dashboard) above. Cloudflare **Web Analytics**
-(**Analytics & logs → Web Analytics → Add a site**) can be enabled alongside it
-for Core Web Vitals; the two do not conflict.
+Traffic and Web Vitals come from the built-in beacons and appear at `/admin`
+with no further setup — see [Admin dashboard](#admin-dashboard) above.
+Cloudflare **Web Analytics** (**Analytics & logs → Web Analytics → Add a site**)
+can be enabled alongside as an independent cross-check; the two do not conflict.
 
 ## Project structure
 
@@ -227,6 +248,7 @@ thomasmeiss.video/
 │   ├── routes/
 │   │   ├── contact.ts             # POST /api/contact → email + D1
 │   │   ├── collect.ts             # POST /api/collect  → pageview beacon
+│   │   ├── vitals.ts              # POST /api/vitals   → Core Web Vitals beacon
 │   │   └── admin.ts               # GET/PATCH/DELETE /api/admin/* (authenticated)
 │   └── lib/
 │       ├── access.ts              # Cloudflare Access JWT verification
@@ -239,12 +261,12 @@ thomasmeiss.video/
 │   ├── App.tsx                    # Section composition + skip link
 │   ├── index.css                  # Design tokens, a11y, motion utilities
 │   ├── data/content.ts            # All copy, links, pricing (single source)
-│   ├── lib/analytics.ts           # Pageview beacon
+│   ├── lib/analytics.ts           # Pageview + Web Vitals beacons
 │   ├── hooks/usePrefersReducedMotion.ts
 │   ├── admin/
 │   │   ├── AdminApp.tsx           # Dashboard shell (Analytics | Inquiries)
-│   │   ├── api.ts, format.ts
-│   │   └── components/            # StatTile, TrendChart, InquiryColumns, BarList, …
+│   │   ├── api.ts, format.ts, vitals.ts
+│   │   └── components/            # StatTile, TrendChart, WebVitals, BarList, …
 │   └── components/
 │       ├── Nav.tsx                # Sticky nav + mobile menu
 │       ├── Hero.tsx … Footer.tsx  # 11 page sections
@@ -266,6 +288,7 @@ Browser → Cloudflare edge
   POST /api/contact   → worker → Email Sending → inbox
                               └→ D1 contact_submissions
   POST /api/collect   → worker → D1 page_views
+  POST /api/vitals    → worker → D1 web_vitals      (sent as the page is hidden)
 
 Browser → Cloudflare Access (login) → /admin        → static SPA assets
                                     → /api/admin/*  → worker (re-verifies JWT) → D1

@@ -8,6 +8,9 @@ const DEFAULT_RANGE = 30;
 const BREAKDOWN_LIMIT = 8; // Deeper tails are noise on a portfolio site.
 const SUBMISSIONS_PAGE = 25;
 
+/** Column names are fixed here, never taken from the request. */
+const VITAL_COLUMNS = ["lcp", "inp", "cls", "ttfb", "fcp"] as const;
+
 interface Bucket {
   key: string;
   count: number;
@@ -78,6 +81,7 @@ async function getOverview(env: Env, url: URL): Promise<Response> {
     referrers,
     countries,
     devices,
+    ...vitals
   ] = await env.DB.batch<Record<string, string | number | null>>([
     env.DB.prepare(
       `SELECT COUNT(*) AS views, COUNT(DISTINCT visitor_hash) AS visitors
@@ -107,6 +111,7 @@ async function getOverview(env: Env, url: URL): Promise<Response> {
     breakdown(env, "referrer_host", from),
     breakdown(env, "country", from),
     breakdown(env, "device", from),
+    ...VITAL_COLUMNS.map((column) => percentile75(env, column, from)),
   ]);
 
   const views = num(totals.results[0]?.views);
@@ -137,7 +142,34 @@ async function getOverview(env: Env, url: URL): Promise<Response> {
       countries: toBuckets(countries.results, "country", "Unknown"),
       devices: toBuckets(devices.results, "device", "Unknown"),
     },
+    vitals: Object.fromEntries(
+      VITAL_COLUMNS.map((column, i) => {
+        const row = vitals[i]?.results[0];
+        const samples = num(row?.samples);
+        return [column, { p75: samples > 0 ? num(row?.p75) : null, samples }];
+      }),
+    ),
   });
+}
+
+/**
+ * 75th percentile of one Web Vitals column — the percentile Google reports
+ * Core Web Vitals at, so the numbers line up with PageSpeed Insights.
+ *
+ * SQLite has no percentile function; the nearest-rank equivalent is to order
+ * the non-null values and skip to the rank. NULLs are excluded per column, so
+ * each metric's sample count is its own — a visitor who never interacts
+ * contributes an LCP but no INP.
+ */
+function percentile75(env: Env, column: string, from: number): D1PreparedStatement {
+  return env.DB.prepare(
+    `WITH vals AS (
+       SELECT ${column} AS v FROM web_vitals WHERE ts >= ?1 AND ${column} IS NOT NULL
+     )
+     SELECT (SELECT COUNT(*) FROM vals) AS samples,
+            (SELECT v FROM (SELECT v FROM vals ORDER BY v)
+               LIMIT 1 OFFSET (SELECT CAST((COUNT(*) - 1) * 0.75 AS INTEGER) FROM vals)) AS p75`,
+  ).bind(from);
 }
 
 /**

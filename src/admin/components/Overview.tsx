@@ -5,6 +5,7 @@ import { BarList } from "./BarList";
 import { InquiryColumns } from "./InquiryColumns";
 import { StatTile } from "./StatTile";
 import { TrendChart } from "./TrendChart";
+import { WebVitals } from "./WebVitals";
 
 const RANGES = [
   { days: 7, label: "7 days" },
@@ -111,6 +112,8 @@ export function Overview({ onUnauthorized }: { onUnauthorized: () => void }) {
           <div className="mt-6 space-y-6">
             <TrendChart series={data.series} />
             <InquiryColumns series={data.series} />
+
+            <WebVitals vitals={data.vitals} />
 
             <div className="grid gap-4 lg:grid-cols-2">
               <BarList

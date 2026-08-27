@@ -12,6 +12,9 @@ export interface Bucket {
   count: number;
 }
 
+/** p75 and sample count per Web Vitals metric; `p75` is null with no samples. */
+export type VitalsSummary = Record<string, { p75: number | null; samples: number }>;
+
 export interface Overview {
   range: { days: number; from: number; to: number };
   totals: {
@@ -30,6 +33,7 @@ export interface Overview {
     countries: Bucket[];
     devices: Bucket[];
   };
+  vitals: VitalsSummary;
 }
 
 export type SubmissionStatus = "new" | "read" | "archived";
