@@ -184,6 +184,20 @@ the totals, and writes the SQL it *would* run to `imported-web-analytics.sql`
 for inspection. Re-running is idempotent. Delete the API token afterwards — it
 is only needed for the import and is never uploaded to the Worker.
 
+Apply the migrations to the **remote** database before importing, or the run
+ends with "the imported_daily table does not exist" — the generated SQL is kept,
+so it can be applied directly afterwards without re-fetching:
+
+```bash
+npx wrangler d1 execute thomasmeiss-video --remote --file=imported-web-analytics.sql --yes
+```
+
+The generated SQL deliberately contains no `BEGIN`/`COMMIT`. Remote D1 rejects
+explicit transaction statements even though the local dev database accepts them,
+so a file that applies with `--local` can still fail with `--remote`. Every
+statement is `INSERT OR REPLACE` keyed on the full dimension tuple, so a partial
+run is corrected by running it again.
+
 Imported data is deliberately **not** merged into `page_views`:
 
 - Cloudflare returns daily aggregates, not events, so per-view rows would have

@@ -81,6 +81,18 @@ Utilities: `.texture-diagonal`, `.glow-ember`, `.link-underline`, `.animate-marq
 - **Do not** add Netlify config or Pages assumptions
 - **Do not** set `remote: true` on `send_email` by default (breaks local dev without auth)
 
+### D1 gotcha: local accepts what remote rejects
+
+The local dev database is plain SQLite; remote D1 is not. Explicit transaction
+statements (`BEGIN`/`COMMIT`/`SAVEPOINT`) are accepted by `--local` and rejected
+by `--remote`, so `wrangler d1 execute --local` passing proves nothing about
+production. Generated SQL must not wrap statements in a transaction — make the
+statements idempotent instead, as `scripts/import-web-analytics.mjs` does.
+
+Note also that dropping a table by hand does not un-apply its migration: the
+`d1_migrations` ledger still lists it, so `db:migrate` will not recreate it. Run
+the migration file directly to rebuild.
+
 ### Contact Worker (`worker/index.ts`)
 
 - `POST /api/contact` only; validate JSON; honeypot `bot-field`
