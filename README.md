@@ -200,9 +200,17 @@ Cloudflare has no record for break the line rather than plotting as zero, and
 days before tracking began show as "not tracked yet" rather than as zeroes.
 
 If the importer cannot find the site or the dataset, it says what it *did* find
-and takes `--site-tag=<tag>` or `--dataset=<name>` to override. It discovers the
-GraphQL schema at runtime rather than assuming field names, so a schema change
-on Cloudflare's side surfaces as a clear message instead of a failed query.
+and takes `--site-tag=<tag>` or `--dataset=<name>` to override. `--debug` echoes
+the raw API responses.
+
+It works out the query rather than assuming it. The token is verified first, so
+a permissions problem is reported as one. It then walks the GraphQL schema from
+the root to find the account type, dataset and dimension names; if the endpoint
+will not describe itself, it falls back to the conventional names instead of
+giving up. Either way it proves the query against a single day first and drops
+whatever the API rejects — so a renamed dimension costs one retry and a slightly
+thinner import rather than a failed run. Daily totals, which are what the chart
+needs, survive all of it.
 
 `/api/collect` is public by necessity (the site itself calls it) and only
 same-origin, non-bot requests are recorded. That bounds accidental noise, not a
