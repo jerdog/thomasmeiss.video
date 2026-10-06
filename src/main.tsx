@@ -4,25 +4,35 @@ import App from "./App";
 import { trackPageView } from "./lib/analytics";
 import "./index.css";
 
-// The dashboard is a separate chunk: the public site never downloads it.
+// The dashboard and the contract-signing page are separate chunks: the public
+// site never downloads them.
 const AdminApp = lazy(() => import("./admin/AdminApp"));
+const SignApp = lazy(() => import("./sign/SignApp"));
 
-const isAdmin =
-  window.location.pathname === "/admin" || window.location.pathname.startsWith("/admin/");
+const { pathname } = window.location;
+const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
+// A client's private signing link — never counted as a site visit.
+const isSign = pathname.startsWith("/sign/");
 
-if (!isAdmin) trackPageView();
+if (!isAdmin && !isSign) trackPageView();
+
+function Loading({ label }: { label: string }) {
+  return (
+    <p className="p-6 font-body text-sm text-bone-muted" role="status">
+      {label}
+    </p>
+  );
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     {isAdmin ? (
-      <Suspense
-        fallback={
-          <p className="p-6 font-body text-sm text-bone-muted" role="status">
-            Loading dashboard…
-          </p>
-        }
-      >
+      <Suspense fallback={<Loading label="Loading dashboard…" />}>
         <AdminApp />
+      </Suspense>
+    ) : isSign ? (
+      <Suspense fallback={<Loading label="Loading contract…" />}>
+        <SignApp />
       </Suspense>
     ) : (
       <App />

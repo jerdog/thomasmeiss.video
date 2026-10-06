@@ -36,6 +36,8 @@ export interface SubmissionRow {
   email: string;
   project_type: string;
   message: string;
+  heard_about: string | null;
+  heard_about_detail: string | null;
   country: string | null;
   referrer: string | null;
   email_status: string;
@@ -104,26 +106,56 @@ export async function insertSubmission(
   db: D1Database,
   row: Omit<SubmissionRow, "id" | "status">,
 ): Promise<number | null> {
-  const result = await db
-    .prepare(
-      `INSERT INTO contact_submissions
-         (ts, name, email, project_type, message, country, referrer, email_status, email_error, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
-       RETURNING id`,
-    )
-    .bind(
-      row.ts,
-      row.name,
-      row.email,
-      row.project_type,
-      row.message,
-      row.country,
-      row.referrer,
-      row.email_status,
-      row.email_error,
-    )
-    .first<{ id: number }>();
-  return result?.id ?? null;
+  try {
+    const result = await db
+      .prepare(
+        `INSERT INTO contact_submissions
+           (ts, name, email, project_type, message, heard_about, heard_about_detail,
+            country, referrer, email_status, email_error, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
+         RETURNING id`,
+      )
+      .bind(
+        row.ts,
+        row.name,
+        row.email,
+        row.project_type,
+        row.message,
+        row.heard_about,
+        row.heard_about_detail,
+        row.country,
+        row.referrer,
+        row.email_status,
+        row.email_error,
+      )
+      .first<{ id: number }>();
+    return result?.id ?? null;
+  } catch (err) {
+    // A Worker deployed ahead of migration 0004 must still record the inquiry:
+    // the "heard about" answer is the only thing worth losing.
+    if (!/no such column|has no column/i.test(String(err))) throw err;
+    console.warn("contact_submissions.heard_about missing — apply migration 0004");
+    const result = await db
+      .prepare(
+        `INSERT INTO contact_submissions
+           (ts, name, email, project_type, message, country, referrer, email_status, email_error, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
+         RETURNING id`,
+      )
+      .bind(
+        row.ts,
+        row.name,
+        row.email,
+        row.project_type,
+        row.message,
+        row.country,
+        row.referrer,
+        row.email_status,
+        row.email_error,
+      )
+      .first<{ id: number }>();
+    return result?.id ?? null;
+  }
 }
 
 /**

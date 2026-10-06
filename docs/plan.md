@@ -74,6 +74,10 @@ isProject: false
 | Web Vitals | Done (code) | `web-vitals` → D1, p75 panel on the dashboard; no Cloudflare setup needed |
 | Imported history | Done (code) | `npm run analytics:import` pulls Cloudflare Web Analytics into `imported_daily`; run once with an Analytics:Read token |
 | Admin dashboard | Done (code) | `/admin` behind Cloudflare Access; analytics + inquiry inbox |
+| "How did you hear about me?" | Done (code) | Optional contact-form field → `contact_submissions.heard_about`; breakdown on Analytics. Migration 0004 |
+| Contracts | Done (code) | Questionnaire → generated agreement → emailed `/sign/<token>` link → typed e-signature. Migration 0005 |
+| Invoices | Done (code) | Itemised, numbered per year, emailed with reminders; paid / overdue tracking. Migration 0005 |
+| Client email sending | **Pending** | Onboard `thomasmeiss.video` for Email Sending — until then only verified addresses can be emailed |
 | Admin Cloudflare setup | **Pending** | D1 `database_id`, remote migrations, Access application, Worker vars + `ANALYTICS_SALT` secret |
 | Deploy + domain | **Pending** | Requires `wrangler login`, email config, `npm run deploy`, custom domain attach |
 

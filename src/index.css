@@ -117,3 +117,33 @@
   html { scroll-behavior: auto; }
   .animate-marquee { animation: none; }
 }
+
+/* Contracts and invoices (/admin, /sign): print only the document itself. */
+@media print {
+  body {
+    background: #fff;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-doc,
+  .print-doc * {
+    visibility: visible;
+  }
+
+  .print-doc {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    max-width: none;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  @page {
+    margin: 18mm;
+  }
+}

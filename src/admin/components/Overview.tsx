@@ -139,6 +139,12 @@ export function Overview({ onUnauthorized }: { onUnauthorized: () => void }) {
                 total={data.totals.views}
                 formatKey={(key) => key.charAt(0).toUpperCase() + key.slice(1)}
               />
+              <BarList
+                title="How inquiries heard about you"
+                items={data.breakdowns.heardAbout}
+                total={data.totals.submissions}
+                emptyMessage="No answers in this range yet."
+              />
             </div>
           </div>
         </div>

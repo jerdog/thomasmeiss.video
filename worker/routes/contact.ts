@@ -6,11 +6,15 @@ interface ContactPayload {
   email?: string;
   projectType?: string;
   message?: string;
+  heardAbout?: string;
+  heardAboutDetail?: string;
   "bot-field"?: string;
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_MESSAGE_CHARS = 5000;
+const MAX_HEARD_ABOUT_CHARS = 80;
+const MAX_HEARD_ABOUT_DETAIL_CHARS = 120;
 
 export async function handleContact(request: Request, env: Env): Promise<Response> {
   if (request.method === "OPTIONS") {
@@ -36,6 +40,15 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
   const email = body.email?.trim();
   const projectType = body.projectType?.trim();
   const message = body.message?.trim().slice(0, MAX_MESSAGE_CHARS);
+  // Optional, and not checked against the form's option list: the value only
+  // ever reaches the admin dashboard, and an unknown source is still an answer.
+  const heardAbout = optionalText(body.heardAbout, MAX_HEARD_ABOUT_CHARS);
+  const heardAboutDetail = heardAbout
+    ? optionalText(body.heardAboutDetail, MAX_HEARD_ABOUT_DETAIL_CHARS)
+    : null;
+  const heardAboutLine = heardAbout
+    ? `${heardAbout}${heardAboutDetail ? ` — ${heardAboutDetail}` : ""}`
+    : null;
 
   if (!name || !email || !projectType || !message) {
     return json(
@@ -58,6 +71,7 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
     `Name: ${name}`,
     `Email: ${email}`,
     `Project type: ${projectType}`,
+    ...(heardAboutLine ? [`Heard about: ${heardAboutLine}`] : []),
     "",
     message,
   ].join("\n");
@@ -67,6 +81,7 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
       <p><strong>Name:</strong> ${escapeHtml(name)}</p>
       <p><strong>Email:</strong> ${escapeHtml(email)}</p>
       <p><strong>Project type:</strong> ${escapeHtml(projectType)}</p>
+      ${heardAboutLine ? `<p><strong>Heard about:</strong> ${escapeHtml(heardAboutLine)}</p>` : ""}
       <hr />
       <p>${escapeHtml(message).replace(/\n/g, "<br />")}</p>
     `;
@@ -99,6 +114,8 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
       email,
       project_type: projectType,
       message,
+      heard_about: heardAbout,
+      heard_about_detail: heardAboutDetail,
       country: request.headers.get("CF-IPCountry"),
       referrer: request.headers.get("Referer")?.slice(0, 512) ?? null,
       email_status: emailStatus,
@@ -118,6 +135,11 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
   }
 
   return json({ ok: true }, 200, corsHeaders(request));
+}
+
+function optionalText(value: unknown, maxChars: number): string | null {
+  if (typeof value !== "string") return null;
+  return value.trim().slice(0, maxChars) || null;
 }
 
 function corsHeaders(request: Request): Record<string, string> {

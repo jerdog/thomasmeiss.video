@@ -8,6 +8,7 @@ import {
   type SubmissionStatus,
 } from "../api";
 import { countryName, dateTime } from "../format";
+import type { ContractPrefill } from "./Contracts";
 
 type Filter = SubmissionStatus | "all";
 
@@ -21,9 +22,11 @@ const FILTERS: { value: Filter; label: string }[] = [
 export function Submissions({
   onUnauthorized,
   onUnreadChange,
+  onDraftContract,
 }: {
   onUnauthorized: () => void;
   onUnreadChange: (unread: number) => void;
+  onDraftContract: (prefill: ContractPrefill) => void;
 }) {
   const [filter, setFilter] = useState<Filter>("new");
   const [items, setItems] = useState<Submission[]>([]);
@@ -211,6 +214,17 @@ export function Submissions({
                           {submission.referrer ? ` · ${submission.referrer}` : ""}
                         </dd>
                       </div>
+                      <div>
+                        <dt className="text-xs uppercase tracking-widest text-bone-muted">
+                          Heard about you
+                        </dt>
+                        <dd className="text-bone">
+                          {submission.heard_about ?? "Not answered"}
+                          {submission.heard_about_detail
+                            ? ` — ${submission.heard_about_detail}`
+                            : ""}
+                        </dd>
+                      </div>
                     </dl>
 
                     <p className="mt-4 whitespace-pre-wrap font-body text-sm leading-relaxed text-bone">
@@ -225,6 +239,26 @@ export function Submissions({
                     )}
 
                     <div className="mt-4 flex flex-wrap gap-2">
+                      <ActionButton
+                        onClick={() =>
+                          onDraftContract({
+                            submissionId: submission.id,
+                            answers: {
+                              client: {
+                                name: submission.name,
+                                email: submission.email,
+                                company: "",
+                                phone: "",
+                                address: "",
+                              },
+                              projectType:
+                                submission.project_type === "Other" ? "" : submission.project_type,
+                            },
+                          })
+                        }
+                      >
+                        Draft contract
+                      </ActionButton>
                       {submission.status !== "read" && (
                         <ActionButton onClick={() => changeStatus(submission, "read")}>
                           Mark as read

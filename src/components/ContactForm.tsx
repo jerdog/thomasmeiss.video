@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { pricing, projectTypes } from "../data/content";
+import { pricing, projectTypes, referralSources } from "../data/content";
 import { PillButton } from "./ui/PillButton";
 import { SectionHeading } from "./ui/SectionHeading";
 
@@ -29,6 +29,11 @@ export function ContactForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<Field, string>>>({});
+  const [heardAbout, setHeardAbout] = useState("");
+
+  const heardAboutSource = referralSources.find((source) => source.value === heardAbout);
+  const detailLabel =
+    heardAboutSource && "detailLabel" in heardAboutSource ? heardAboutSource.detailLabel : null;
 
   const refs = {
     name: useRef<HTMLInputElement>(null),
@@ -84,6 +89,7 @@ export function ContactForm() {
       }
       setStatus("success");
       form.reset();
+      setHeardAbout("");
     } catch (err) {
       setStatus("error");
       setErrorMsg(err instanceof Error ? err.message : "Something went wrong");
@@ -214,6 +220,42 @@ export function ContactForm() {
                 <p id="projectType-error" className={errorClass} role="alert">
                   {fieldErrors.projectType}
                 </p>
+              )}
+            </div>
+
+            <div className={detailLabel ? "grid gap-5 sm:grid-cols-2" : undefined}>
+              <div>
+                <label htmlFor="heardAbout" className={labelClass}>
+                  How did you hear about me?{" "}
+                  <span className="normal-case tracking-normal">(optional)</span>
+                </label>
+                <select
+                  id="heardAbout"
+                  name="heardAbout"
+                  value={heardAbout}
+                  onChange={(e) => setHeardAbout(e.target.value)}
+                  className={`${inputBase} border-border-strong focus:border-accent`}
+                >
+                  <option value="">Select one</option>
+                  {referralSources.map((source) => (
+                    <option key={source.value} value={source.value}>{source.value}</option>
+                  ))}
+                </select>
+              </div>
+              {detailLabel && (
+                <div>
+                  <label htmlFor="heardAboutDetail" className={labelClass}>
+                    {detailLabel}{" "}
+                    <span className="normal-case tracking-normal">(optional)</span>
+                  </label>
+                  <input
+                    id="heardAboutDetail"
+                    name="heardAboutDetail"
+                    type="text"
+                    maxLength={120}
+                    className={`${inputBase} border-border-strong focus:border-accent`}
+                  />
+                </div>
               )}
             </div>
 
