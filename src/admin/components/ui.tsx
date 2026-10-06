@@ -26,7 +26,7 @@ export function Button({
   const styles = {
     default: "border-border text-bone-muted hover:border-border-strong hover:text-bone",
     primary: "border-accent bg-accent/15 text-bone hover:bg-accent/25",
-    destructive: "border-red-400/50 text-red-300 hover:bg-red-400/10",
+    destructive: "border-danger/50 text-danger hover:bg-danger/10",
   }[variant];
   return (
     <button
@@ -80,10 +80,10 @@ export function FilterButtons<T extends string>({
 const BADGE_STYLES: Record<string, string> = {
   draft: "bg-bone/10 text-bone-muted",
   sent: "bg-accent/20 text-accent-light",
-  signed: "bg-emerald-400/15 text-emerald-200",
-  paid: "bg-emerald-400/15 text-emerald-200",
-  overdue: "bg-amber-400/15 text-amber-200",
-  void: "bg-red-400/10 text-red-200",
+  signed: "bg-success/15 text-success",
+  paid: "bg-success/15 text-success",
+  overdue: "bg-warning/15 text-warning",
+  void: "bg-danger/10 text-danger",
 };
 
 export function StatusBadge({ status }: { status: string }) {
@@ -102,7 +102,7 @@ export function ErrorBanner({ message }: { message: string }) {
   if (!message) return null;
   return (
     <p
-      className="rounded border border-red-400/50 bg-red-400/10 p-4 font-body text-sm text-red-200"
+      className="rounded border border-danger/50 bg-danger/10 p-4 font-body text-sm text-danger"
       role="alert"
     >
       {message}

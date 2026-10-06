@@ -1,6 +1,7 @@
 import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { applyTheme, storedTheme } from "./admin/theme";
 import { trackPageView } from "./lib/analytics";
 import "./index.css";
 
@@ -15,6 +16,8 @@ const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
 const isSign = pathname.startsWith("/sign/");
 
 if (!isAdmin && !isSign) trackPageView();
+// Before first paint, so the dashboard never flashes the dark site palette.
+if (isAdmin) applyTheme(storedTheme());
 
 function Loading({ label }: { label: string }) {
   return (

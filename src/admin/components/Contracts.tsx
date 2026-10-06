@@ -169,7 +169,7 @@ export function Contracts({
                 <span className="font-body text-sm font-semibold text-bone">{contract.title}</span>
                 <span className="font-body text-sm text-bone-muted">{contract.client_name}</span>
                 {contract.email_error && contract.status === "draft" && (
-                  <span className="font-body text-xs text-amber-200">⚠ send failed</span>
+                  <span className="font-body text-xs text-warning">⚠ send failed</span>
                 )}
                 <span className="ml-auto font-body text-sm tabular-nums text-bone">
                   {formatCents(contract.fee_cents)}

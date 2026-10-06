@@ -86,9 +86,9 @@ export function rate(metric: VitalMetric, value: number): Rating {
  * the colour is never the only thing carrying the state.
  */
 export const RATING_STYLE: Record<Rating, { label: string; glyph: string; text: string }> = {
-  good: { label: "Good", glyph: "✓", text: "text-emerald-300" },
-  "needs-work": { label: "Needs work", glyph: "!", text: "text-amber-300" },
-  poor: { label: "Poor", glyph: "✕", text: "text-red-300" },
+  good: { label: "Good", glyph: "✓", text: "text-success" },
+  "needs-work": { label: "Needs work", glyph: "!", text: "text-warning" },
+  poor: { label: "Poor", glyph: "✕", text: "text-danger" },
 };
 
 /**
@@ -98,9 +98,9 @@ export const RATING_STYLE: Record<Rating, { label: string; glyph: string; text: 
  * Written as whole class names so Tailwind keeps them.
  */
 export const ZONE_FILL: Record<Rating, { active: string; idle: string }> = {
-  good: { active: "bg-emerald-400/45", idle: "bg-emerald-400/15" },
-  "needs-work": { active: "bg-amber-400/45", idle: "bg-amber-400/15" },
-  poor: { active: "bg-red-400/45", idle: "bg-red-400/15" },
+  good: { active: "bg-success/45", idle: "bg-success/15" },
+  "needs-work": { active: "bg-warning/45", idle: "bg-warning/15" },
+  poor: { active: "bg-danger/45", idle: "bg-danger/15" },
 };
 
 export function formatVital(metric: VitalMetric, value: number): string {

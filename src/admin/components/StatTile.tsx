@@ -36,7 +36,7 @@ export function StatTile({
       </p>
       {change !== null && (
         <p className="mt-3 font-body text-xs text-bone-muted">
-          <span className={change >= 0 ? "text-emerald-300" : "text-red-300"}>
+          <span className={change >= 0 ? "text-success" : "text-danger"}>
             {change >= 0 ? "▲" : "▼"} {formatDelta(change)}
           </span>{" "}
           {comparedTo ?? "vs previous period"}

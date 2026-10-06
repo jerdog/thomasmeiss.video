@@ -145,7 +145,7 @@ export function Submissions({
       </div>
 
       {error && (
-        <p className="rounded border border-red-400/50 bg-red-400/10 p-4 font-body text-sm text-red-200" role="alert">
+        <p className="rounded border border-danger/50 bg-danger/10 p-4 font-body text-sm text-danger" role="alert">
           {error}
         </p>
       )}
@@ -232,7 +232,7 @@ export function Submissions({
                     </p>
 
                     {submission.email_status === "failed" && (
-                      <p className="mt-4 rounded border border-amber-400/50 bg-amber-400/10 p-3 font-body text-xs text-amber-200">
+                      <p className="mt-4 rounded border border-warning/50 bg-warning/10 p-3 font-body text-xs text-warning">
                         ⚠ Email notification failed{submission.email_error ? `: ${submission.email_error}` : ""}.
                         The inquiry was still saved here.
                       </p>
@@ -315,7 +315,7 @@ function ActionButton({
       onClick={onClick}
       className={`min-h-11 rounded-full border px-4 font-body text-xs uppercase tracking-widest transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
         destructive
-          ? "border-red-400/50 text-red-300 hover:bg-red-400/10"
+          ? "border-danger/50 text-danger hover:bg-danger/10"
           : "border-border text-bone-muted hover:border-border-strong hover:text-bone"
       }`}
     >

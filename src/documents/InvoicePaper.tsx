@@ -29,7 +29,7 @@ export function InvoicePaper({
   const totals = invoiceTotals(invoice.items, invoice.taxRate);
   return (
     <article
-      className="print-doc mx-auto max-w-3xl bg-[#fbfaf7] px-6 py-10 font-body text-sm text-neutral-900 shadow-lg sm:px-12"
+      className="print-doc mx-auto max-w-3xl bg-[#fbfaf7] px-6 py-10 font-body text-sm text-neutral-900 shadow-lg ring-1 ring-black/10 sm:px-12"
       aria-label={`Invoice ${invoice.number}`}
     >
       <header className="flex flex-wrap items-start justify-between gap-6">

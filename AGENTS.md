@@ -219,11 +219,20 @@ data needs no notion of who. Anything that would make a visitor identifiable acr
 persistent id, a cookie, storing the raw IP) needs a consent banner and is a
 product decision, not a refactor.
 
+**Theme.** The dashboard defaults to **light**: `src/admin/theme.ts` sets
+`data-theme="light"` on `<html>` before first paint, and `index.css` redefines
+the colour tokens under `:root[data-theme="light"]`. A header switch flips to the
+dark site palette, remembered in `localStorage` (an owner preference — the
+no-storage rule is about visitors). The public site and `/sign` never set the
+attribute. Use tokens, not palette classes, in admin code: status colours are
+`success` / `warning` / `danger` (e.g. `text-danger`, `bg-success/15`), so they
+work in both themes.
+
 **Charts** (`src/admin/components/`) are hand-rolled inline SVG — no chart
 library. Series colours are `--color-chart-views` / `--color-chart-visitors`,
 validated for contrast and colour-vision deficiency against the `--color-surface`
-card. If either token or the card colour changes, re-validate the pair rather
-than eyeballing it. Every chart keeps a legend (2+ series), a table view or
+card — separately for each theme. If either token or the card colour changes in
+either theme, re-validate the pair rather than eyeballing it. Every chart keeps a legend (2+ series), a table view or
 `aria-label` summary, and hover *and* keyboard access to values.
 
 ## Out of scope (unless requested)

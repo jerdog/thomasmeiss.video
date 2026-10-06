@@ -17,7 +17,7 @@ export function ContractPaper({
 }) {
   return (
     <article
-      className="print-doc mx-auto max-w-3xl bg-[#fbfaf7] px-6 py-10 font-body text-[15px] leading-relaxed text-neutral-900 shadow-lg sm:px-12"
+      className="print-doc mx-auto max-w-3xl bg-[#fbfaf7] px-6 py-10 font-body text-[15px] leading-relaxed text-neutral-900 shadow-lg ring-1 ring-black/10 sm:px-12"
       aria-label={doc.title}
     >
       {preview && (

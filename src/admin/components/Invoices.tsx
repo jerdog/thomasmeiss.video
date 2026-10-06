@@ -201,7 +201,7 @@ export function Invoices({
                     {invoice.client_company || invoice.client_name}
                   </span>
                   {invoice.email_error && (
-                    <span className="font-body text-xs text-amber-200">⚠ email failed</span>
+                    <span className="font-body text-xs text-warning">⚠ email failed</span>
                   )}
                   <span className="ml-auto font-body text-sm tabular-nums text-bone">
                     {formatCents(invoice.total_cents)}

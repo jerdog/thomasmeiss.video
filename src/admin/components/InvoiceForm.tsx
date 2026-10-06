@@ -183,7 +183,7 @@ export function InvoiceForm({
                         type="button"
                         onClick={() => setItems((prev) => prev.filter((_, i) => i !== index))}
                         aria-label={`Remove line ${n}`}
-                        className="min-h-11 font-body text-xs uppercase tracking-widest text-red-300 hover:text-red-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                        className="min-h-11 font-body text-xs uppercase tracking-widest text-danger hover:text-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                       >
                         Remove
                       </button>

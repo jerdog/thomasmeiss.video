@@ -17,6 +17,33 @@
   --color-surface: #2d3438;
   --color-chart-views: #3899e2;
   --color-chart-visitors: #ce7c22;
+  /* Status text and tints (admin badges, banners, deltas, Web Vitals ratings). */
+  --color-success: oklch(0.845 0.143 165);
+  --color-warning: oklch(0.879 0.169 91.6);
+  --color-danger: oklch(0.808 0.114 19.6);
+}
+
+/* Admin light theme — the dashboard's default; `src/admin/theme.ts` sets the
+   attribute. The public site and /sign never set it, so they stay dark.
+   Validated pairs (WCAG contrast): bone 16.2:1 and bone-muted 6.7:1 on surface;
+   accent and status colours ≥ 5:1 on their 15% tints; border-strong 3.2:1.
+   Chart series are 4.6:1 (views) and 4.2:1 (visitors) on the white surface,
+   with the same CVD separation as the dark pair — re-validate if any change. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-ground: #f5f4f0;
+  --color-surface: #ffffff;
+  --color-bone: #1c2126;
+  --color-bone-muted: #565d64;
+  --color-accent: #1f64ad;
+  --color-accent-light: #1a5596;
+  --color-border: oklch(0.23 0.01 250 / 0.26);
+  --color-border-strong: oklch(0.23 0.01 250 / 0.5);
+  --color-chart-views: #2a78c0;
+  --color-chart-visitors: #c0620a;
+  --color-success: #03664e;
+  --color-warning: #8a4b06;
+  --color-danger: #b4231c;
 }
 
 @layer base {

@@ -4,6 +4,7 @@ import { Contracts, type ContractPrefill } from "./components/Contracts";
 import { Invoices } from "./components/Invoices";
 import { Overview } from "./components/Overview";
 import { Submissions } from "./components/Submissions";
+import { saveTheme, storedTheme, type Theme } from "./theme";
 
 type Tab = "analytics" | "inquiries" | "contracts" | "invoices";
 
@@ -32,6 +33,7 @@ export default function AdminApp() {
   const [expired, setExpired] = useState(false);
   const [tab, setTab] = useState<Tab>(tabFromHash);
   const [unread, setUnread] = useState(0);
+  const [theme, setTheme] = useState<Theme>(storedTheme);
   // Cross-tab hand-offs: an inquiry starts a contract, a contract starts an invoice.
   const [contractPrefill, setContractPrefill] = useState<ContractPrefill | null>(null);
   const [invoicePrefill, setInvoicePrefill] = useState<Partial<InvoiceDraft> | null>(null);
@@ -106,6 +108,17 @@ export default function AdminApp() {
 
           <div className="ml-auto flex items-center gap-4 font-body text-xs text-bone-muted">
             {email && <span className="hidden sm:inline">{email}</span>}
+            <button
+              type="button"
+              onClick={() => {
+                const next = theme === "light" ? "dark" : "light";
+                saveTheme(next);
+                setTheme(next);
+              }}
+              className="link-underline min-h-11 hover:text-bone focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              {theme === "light" ? "Dark mode" : "Light mode"}
+            </button>
             <a href="/" className="link-underline hover:text-bone">
               View site
             </a>

@@ -70,7 +70,7 @@ export function Overview({ onUnauthorized }: { onUnauthorized: () => void }) {
       </div>
 
       {error && (
-        <p className="rounded border border-red-400/50 bg-red-400/10 p-4 font-body text-sm text-red-200" role="alert">
+        <p className="rounded border border-danger/50 bg-danger/10 p-4 font-body text-sm text-danger" role="alert">
           {error}
         </p>
       )}
