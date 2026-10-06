@@ -20,8 +20,8 @@
     "web-vitals": "^6.2.1"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.21.2",
-    "@cloudflare/workers-types": "^4.20260629.1",
+    "@cloudflare/vite-plugin": "^1.63.0",
+    "@cloudflare/workers-types": "^5.20261006.1",
     "@tailwindcss/vite": "^4.1.11",
     "@types/node": "^26.0.1",
     "@types/react": "^19.2.2",
@@ -30,6 +30,6 @@
     "tailwindcss": "^4.1.11",
     "typescript": "^5.9.3",
     "vite": "^7.1.9",
-    "wrangler": "^4.54.0"
+    "wrangler": "^4.148.0"
   }
 }
