@@ -40,7 +40,7 @@ Open [http://localhost:5173](http://localhost:5173).
 | `npm run build` | Typecheck + production build |
 | `npm run deploy` | Build + deploy via [`scripts/deploy.sh`](scripts/deploy.sh) (pins the Cloudflare account) |
 | `npm run preview` | Preview production build locally |
-| `npm run types` | Regenerate `worker-configuration.d.ts` from `wrangler.jsonc` |
+| `npm run types` | Regenerate `worker-configuration.d.ts` from `wrangler.jsonc` and `.dev.vars` |
 | `npm run db:migrate` | Apply D1 migrations to the local database |
 | `npm run db:migrate:remote` | Apply D1 migrations to the production database |
 
@@ -64,7 +64,10 @@ CONTACT_FROM_NAME=Thomas Meiss Video
 CONTACT_TO=your-verified-inbox@example.com
 ```
 
-Run `npm run types` after changing bindings or vars in `wrangler.jsonc`.
+Run `npm run types` after changing bindings or vars in `wrangler.jsonc`. It also
+reads `.dev.vars`, and only emits an `Env` member for a var that file assigns —
+so regenerate from a complete `.dev.vars`, or the build will fail on the
+variables it left out.
 
 ### Dashboard in dev
 

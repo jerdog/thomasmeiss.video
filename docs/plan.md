@@ -28,7 +28,7 @@ todos:
     status: completed
   - id: deploy-verify
     content: Verify vite build + wrangler deploy; attach custom domain thomasmeiss.video
-    status: pending
+    status: completed
   - id: analytics
     content: First-party analytics — /api/collect beacon writing pageviews to D1, surfaced in the /admin dashboard (Cloudflare Web Analytics optional alongside as a cross-check)
     status: completed
@@ -41,8 +41,11 @@ todos:
   - id: import-history
     content: Import pre-launch Cloudflare Web Analytics history into the imported_daily D1 table and show it on the dashboard as a labelled dashed series
     status: completed
+  - id: import-history-run
+    content: "Run the import against production: npm run analytics:import -- --apply (or --apply-only to retry the write), then confirm rows with SELECT COUNT(*) FROM imported_daily, and delete the temporary Analytics:Read API token"
+    status: pending
   - id: admin-cloudflare-setup
-    content: "Post-deploy setup - wrangler d1 create (paste database_id), apply migrations remotely, create the Access application for /admin + /api/admin, set CF_ACCESS_TEAM_DOMAIN / CF_ACCESS_AUD / ADMIN_EMAILS vars and the ANALYTICS_SALT secret"
+    content: "Post-deploy setup - D1 database_id is in wrangler.jsonc; still to confirm from the dashboard: migrations applied remotely, the Access application covering /admin AND /api/admin, and the CF_ACCESS_TEAM_DOMAIN / CF_ACCESS_AUD / ADMIN_EMAILS vars plus the ANALYTICS_SALT secret"
     status: pending
   - id: build-local
     content: "npm run build passes; npm run dev serves at localhost:5173 (manual scaffold — create-cloudflare failed due to dotted folder name)"
@@ -69,13 +72,15 @@ isProject: false
 | Contact API Worker | Done | `worker/index.ts` + generated `worker-configuration.d.ts` |
 | Motion + a11y + SEO | Done | `motion` reveals, reduced-motion hook, skip link, form labels, meta/OG, `robots.txt` |
 | Build / local dev | Done | `npm run build` passes; `npm run dev` works after removing default `remote: true` |
-| Email setup | **Pending** | `CONTACT_TO@example.com` placeholder still in `wrangler.jsonc` |
+| Email setup | **Unconfirmed** | `vars` stay commented out in `wrangler.jsonc`; `CONTACT_TO` is set in the dashboard (`keep_vars: true`), so verify there rather than in the repo |
 | Analytics | Done (code) | First-party beacons → D1 → `/admin`; see Analytics section below |
 | Web Vitals | Done (code) | `web-vitals` → D1, p75 panel on the dashboard; no Cloudflare setup needed |
-| Imported history | Done (code) | `npm run analytics:import` pulls Cloudflare Web Analytics into `imported_daily`; run once with an Analytics:Read token |
+| Imported history | Done (code) | `npm run analytics:import` pulls Cloudflare Web Analytics into `imported_daily`; see the import section below |
+| Imported history — run | **Pending** | Run it against production, confirm rows landed, then delete the temporary API token |
 | Admin dashboard | Done (code) | `/admin` behind Cloudflare Access; analytics + inquiry inbox |
-| Admin Cloudflare setup | **Pending** | D1 `database_id`, remote migrations, Access application, Worker vars + `ANALYTICS_SALT` secret |
-| Deploy + domain | **Pending** | Requires `wrangler login`, email config, `npm run deploy`, custom domain attach |
+| Admin Cloudflare setup | **Partly done** | D1 `database_id` is in `wrangler.jsonc`; remote migrations, the Access application over `/admin` **and** `/api/admin`, the three `CF_ACCESS_*` / `ADMIN_EMAILS` vars and the `ANALYTICS_SALT` secret are dashboard state and cannot be confirmed from the repo |
+| Deploy + domain | Done | Deployed and merged to `main` |
+| Toolchain deps | Done | vite-plugin 1.63, wrangler 4.148, workers-types v5 (peer of wrangler ≥4.127); one dev-only `sharp` advisory remains, pinned by miniflare |
 
 ---
 
@@ -437,12 +442,17 @@ business record, removable only from the dashboard.
 
 ### Remaining setup
 
-1. `npx wrangler d1 create thomasmeiss-video` → paste `database_id` into `wrangler.jsonc`
-2. `npm run db:migrate` (local) and `npm run db:migrate:remote` (production)
-3. Create the Access application and policy; copy the AUD tag and team domain
-4. Set `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `ADMIN_EMAILS` as Worker variables
+Step 1 is done — the `database_id` is in `wrangler.jsonc`. The rest is account
+state that the repo cannot confirm, so check each in the dashboard:
+
+1. ~~`npx wrangler d1 create thomasmeiss-video` → paste `database_id`~~ — done
+2. `npm run db:migrate:remote` — migrations applied to the production database
+3. The Access application and policy, covering `/admin` **and** `/api/admin`
+4. `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`, `ADMIN_EMAILS` as Worker variables
 5. `npx wrangler secret put ANALYTICS_SALT`
-6. Give the deploy token **D1:Edit** alongside Workers Scripts:Edit
+6. The deploy token carrying **D1:Edit** alongside Workers Scripts:Edit
+7. Run the import itself, then delete the temporary Analytics:Read token:
+   `npm run analytics:import -- --apply` (`--apply-only` retries just the write)
 
 Full walkthrough in [`README.md`](../README.md#admin-dashboard).
 

@@ -76,6 +76,13 @@ Utilities: `.texture-diagonal`, `.glow-ember`, `.link-underline`, `.animate-marq
 
 - Config file: **`wrangler.jsonc`** (JSONC, not TOML)
 - After binding changes: `npm run types` → updates `worker-configuration.d.ts`
+- **`wrangler types` reads `.dev.vars`**, so it only emits an `Env` member for a
+  var that file actually assigns. Regenerating on a machine with a partial
+  `.dev.vars` silently drops `CF_ACCESS_*`, `ADMIN_EMAILS` and the rest from
+  `Env`, and the build then fails with "Property … does not exist on type 'Env'".
+  The fix is to complete `.dev.vars` and regenerate — never to delete the
+  offending `env.*` reads. Only commit a regenerated file produced from a
+  complete `.dev.vars`.
 - Use generated **`Env`** type — do not hand-write binding interfaces
 - Deploy: `npm run deploy` (build + wrangler deploy)
 - **Do not** add Netlify config or Pages assumptions
