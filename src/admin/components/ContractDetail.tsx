@@ -228,7 +228,13 @@ export function ContractDetail({
         </section>
       )}
 
-      <ContractPaper doc={doc} signature={signature} preview={!contract.document} />
+      <ContractPaper
+        doc={doc}
+        signature={signature}
+        preview={!contract.document}
+        layout="page"
+        layoutToggle
+      />
     </div>
   );
 }
