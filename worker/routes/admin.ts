@@ -2,6 +2,8 @@ import { authenticate } from "../lib/access";
 import { isSubmissionStatus, type SubmissionRow } from "../lib/db";
 import { isSameOrigin, json } from "../lib/http";
 import { utcDay } from "../lib/visitor";
+import { handleContracts } from "./contracts";
+import { handleInvoices } from "./invoices";
 
 const ALLOWED_RANGES = [7, 30, 90, 365] as const;
 const DEFAULT_RANGE = 30;
@@ -55,6 +57,22 @@ export async function handleAdmin(
     if (request.method === "PATCH") return updateSubmission(request, env, id);
     if (request.method === "DELETE") return deleteSubmission(env, id);
     return methodNotAllowed("PATCH, DELETE");
+  }
+
+  if (route === "contracts" || route.startsWith("contracts/")) {
+    return handleContracts(request, env, url, route);
+  }
+
+  if (route === "invoices" || route.startsWith("invoices/")) {
+    return handleInvoices(request, env, url, route);
+  }
+
+  if (route === "clients") {
+    if (request.method !== "GET") return methodNotAllowed("GET");
+    const { results } = await env.DB.prepare(
+      `SELECT id, name, email, company, phone, address FROM clients ORDER BY updated_at DESC LIMIT 500`,
+    ).all();
+    return json({ ok: true, items: results });
   }
 
   return json({ ok: false, error: "Not found" }, 404);
@@ -119,7 +137,10 @@ async function getOverview(env: Env, url: URL): Promise<Response> {
   const views = num(totals.results[0]?.views);
   const visitors = num(totals.results[0]?.visitors);
   const submissions = num(submissionTotals.results[0]?.current);
-  const imported = await fetchImported(env, utcDay(now - days * 86_400_000));
+  const [imported, heardAbout] = await Promise.all([
+    fetchImported(env, utcDay(now - days * 86_400_000)),
+    fetchHeardAbout(env, from),
+  ]);
 
   return json({
     ok: true,
@@ -164,6 +185,7 @@ async function getOverview(env: Env, url: URL): Promise<Response> {
       referrers: toBuckets(referrers.results, "referrer_host", "Direct / none"),
       countries: toBuckets(countries.results, "country", "Unknown"),
       devices: toBuckets(devices.results, "device", "Unknown"),
+      heardAbout,
     },
     vitals: Object.fromEntries(
       VITAL_COLUMNS.map((column, i) => {
@@ -262,6 +284,28 @@ async function fetchImported(
 }
 
 /**
+ * How inquiries in range heard about the site. Isolated like `fetchImported`:
+ * the column arrives with migration 0004, and its absence must cost this one
+ * panel, not the dashboard.
+ */
+async function fetchHeardAbout(env: Env, from: number): Promise<Bucket[]> {
+  try {
+    const { results } = await env.DB.prepare(
+      `SELECT heard_about AS key, COUNT(*) AS count
+         FROM contact_submissions
+        WHERE ts >= ? AND heard_about IS NOT NULL
+        GROUP BY heard_about ORDER BY count DESC LIMIT ${BREAKDOWN_LIMIT}`,
+    )
+      .bind(from)
+      .all<Record<string, string | number | null>>();
+    return toBuckets(results, "key");
+  } catch (err) {
+    console.warn("Heard-about breakdown unavailable:", err instanceof Error ? err.message : err);
+    return [];
+  }
+}
+
+/**
  * Zero-fill the daily series so the chart has one point per day in the range —
  * a gap in the data must read as a trough, not as a straight line across it.
  */
@@ -319,8 +363,8 @@ async function listSubmissions(env: Env, url: URL): Promise<Response> {
 
   const [page, counts] = await env.DB.batch([
     env.DB.prepare(
-      `SELECT id, ts, name, email, project_type, message, country, referrer,
-              email_status, email_error, status
+      `SELECT id, ts, name, email, project_type, message, heard_about, heard_about_detail,
+              country, referrer, email_status, email_error, status
          FROM contact_submissions ${where}
         ORDER BY id DESC LIMIT ${SUBMISSIONS_PAGE + 1}`,
     ).bind(...binds),

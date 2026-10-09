@@ -81,13 +81,18 @@ correctly returns 401.
 
 ## Admin dashboard
 
-`/admin` is a private dashboard with two views:
+`/admin` is a private dashboard with four views:
 
 - **Analytics** — visitors, page views, inquiries and inquiry rate for the last
   7 / 30 / 90 / 365 days (each against the preceding period), traffic over time,
   inquiries per day, Web Vitals, and top pages / referrers / countries / devices.
 - **Inquiries** — every contact-form submission, filterable by new / read /
-  archived, with reply-by-email, status changes, and delete.
+  archived, with reply-by-email, status changes, delete, the visitor's answer to
+  "How did you hear about me?", and a one-click **Draft contract** hand-off.
+- **Contracts** — generate a contract from a questionnaire, send it for online
+  signature, and track it to signed. See [Contracts and invoices](#contracts-and-invoices).
+- **Invoices** — itemised invoices emailed to clients, with reminders, paid /
+  overdue tracking, and outstanding totals.
 
 Analytics come from a first-party beacon (`POST /api/collect`) rather than a
 third-party script: **no cookies, no local storage, no IP or user-agent stored.**
@@ -165,6 +170,46 @@ In **Workers → thomasmeiss-video → Settings → Variables and Secrets**:
 
 A daily cron (`23 4 * * *`) deletes pageviews past the retention window.
 Contact submissions are never auto-deleted.
+
+### Contracts and invoices
+
+**Contracts** are generated, not written: the questionnaire (client, project,
+dates, deliverables, revisions, fee and deposit, usage rights, cancellation
+policy, …) maps each answer to fixed clause text in
+[`shared/contract.ts`](shared/contract.ts), with a live preview beside the form.
+Sending emails the client a private `/sign/<token>` link; they read the
+agreement and sign by typing their name. The text is **frozen the first time it
+is sent**, so what the client signs is exactly what is stored, and editing is
+draft-only. Both sides get the signed copy by email. From a sent or signed
+contract, **Invoice deposit / Invoice balance** pre-fill an invoice from its
+payment terms.
+
+> The clause wording is a sensible starting template, not legal advice — have
+> it reviewed for your state before relying on it.
+
+**Invoices** are numbered per year (`TMV-2026-0001`), edited as drafts, then
+emailed as an itemised HTML invoice with your payment instructions (each new
+invoice starts with the last ones you used). Sent invoices can be re-sent,
+reminded, marked paid, or voided; "overdue" is derived from the due date. Every
+client email blind-copies `CONTACT_TO` and replies go there.
+
+Clients are stored once per email address and shared by contracts and invoices
+— fill the fields from a saved client, or type a new one.
+
+**Setup** — two things beyond the dashboard setup above:
+
+1. Apply the new migrations (`0004`, `0005`) **before deploying** the Worker:
+   `npm run db:migrate:remote`.
+2. **Onboard `thomasmeiss.video` for Cloudflare Email Sending.** Until then the
+   `send_email` binding can only deliver to verified Destination Addresses, so
+   sending to a real client fails with `destination address is not a verified
+   address` (the dashboard shows the error and leaves the document a draft).
+   Email Routing → Destination Addresses is enough for the contact form, not for
+   mailing clients.
+
+`/sign/*` and `/api/sign/*` must stay **outside** the Cloudflare Access
+application — clients have no Access login. The 256-bit token in the link is
+the credential, and it only exposes the frozen text of that one contract.
 
 ### Importing pre-launch history
 
@@ -322,24 +367,34 @@ thomasmeiss.video/
 │   │   ├── contact.ts             # POST /api/contact → email + D1
 │   │   ├── collect.ts             # POST /api/collect  → pageview beacon
 │   │   ├── vitals.ts              # POST /api/vitals   → Core Web Vitals beacon
-│   │   └── admin.ts               # GET/PATCH/DELETE /api/admin/* (authenticated)
+│   │   ├── admin.ts               # GET/PATCH/DELETE /api/admin/* (authenticated)
+│   │   ├── contracts.ts           # /api/admin/contracts*  (authenticated)
+│   │   ├── invoices.ts            # /api/admin/invoices*   (authenticated)
+│   │   └── sign.ts                # GET/POST /api/sign/:token (public, token-gated)
 │   └── lib/
 │       ├── access.ts              # Cloudflare Access JWT verification
 │       ├── db.ts                  # D1 queries + retention prune
 │       ├── visitor.ts             # Daily-rotating visitor hash, bot + device rules
+│       ├── billing.ts             # Clients, tokens, client-facing email
+│       ├── documents.ts           # Contract + invoice email bodies
 │       └── http.ts                # JSON responses, same-origin guard
+├── shared/                        # Used by both the Worker and the browser
+│   ├── contract.ts                # Contract questionnaire + clause generator
+│   └── money.ts                   # Cents, invoice totals, dates
 ├── migrations/                    # D1 schema (wrangler d1 migrations apply)
 ├── src/
-│   ├── main.tsx                   # Public site, or lazy-loaded /admin bundle
+│   ├── main.tsx                   # Public site, or lazy /admin or /sign bundle
 │   ├── App.tsx                    # Section composition + skip link
 │   ├── index.css                  # Design tokens, a11y, motion utilities
 │   ├── data/content.ts            # All copy, links, pricing (single source)
 │   ├── lib/analytics.ts           # Pageview + Web Vitals beacons
 │   ├── hooks/usePrefersReducedMotion.ts
 │   ├── admin/
-│   │   ├── AdminApp.tsx           # Dashboard shell (Analytics | Inquiries)
+│   │   ├── AdminApp.tsx           # Dashboard shell (Analytics | Inquiries | Contracts | Invoices)
 │   │   ├── api.ts, format.ts, vitals.ts
-│   │   └── components/            # StatTile, TrendChart, WebVitals, BarList, …
+│   │   └── components/            # StatTile, TrendChart, ContractForm, Invoices, …
+│   ├── sign/SignApp.tsx           # Public contract review + e-signature page
+│   ├── documents/                 # ContractPaper, InvoicePaper (printable)
 │   └── components/
 │       ├── Nav.tsx                # Sticky nav + mobile menu
 │       ├── Hero.tsx … Footer.tsx  # 11 page sections
@@ -365,11 +420,15 @@ Browser → Cloudflare edge
 
 Browser → Cloudflare Access (login) → /admin        → static SPA assets
                                     → /api/admin/*  → worker (re-verifies JWT) → D1
+                                                        └→ Email Sending → client
+
+Client  → /sign/<token>     → static SPA assets
+        → /api/sign/<token> → worker (token lookup) → D1 contracts
 ```
 
 - SPA routing: `assets.not_found_handling: "single-page-application"`
 - API-only Worker invocations: `run_worker_first: ["/api/*"]`
-- The `/admin` bundle is a lazy chunk — the public site never downloads it
+- The `/admin` and `/sign` bundles are lazy chunks — the public site never downloads them
 
 ## Content and UI conventions
 

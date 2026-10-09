@@ -141,6 +141,21 @@ export const projectTypes = [
   "Other",
 ] as const;
 
+// "How did you hear about me?" on the contact form. Optional for the visitor.
+// Options with a `detailLabel` reveal a short free-text follow-up.
+export const referralSources = [
+  { value: "Instagram" },
+  { value: "TikTok" },
+  { value: "YouTube" },
+  { value: "Vimeo" },
+  { value: "LinkedIn" },
+  { value: "Google search" },
+  { value: "Coach, team, or school" },
+  { value: "Friend or referral", detailLabel: "Who referred you?" },
+  { value: "Past client" },
+  { value: "Other", detailLabel: "Where did you hear about me?" },
+] as const satisfies readonly { value: string; detailLabel?: string }[];
+
 export const socialLinks = [
   { label: "Vimeo", href: "https://vimeo.com/thomasmeiss" },
   { label: "LinkedIn", href: "https://www.linkedin.com/in/thomas-meiss" },

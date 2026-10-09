@@ -1,9 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
-import { getSession, UnauthorizedError } from "./api";
+import { getSession, UnauthorizedError, type InvoiceDraft } from "./api";
+import { Contracts, type ContractPrefill } from "./components/Contracts";
+import { Invoices } from "./components/Invoices";
 import { Overview } from "./components/Overview";
 import { Submissions } from "./components/Submissions";
+import { saveTheme, storedTheme, type Theme } from "./theme";
 
-type Tab = "analytics" | "inquiries";
+type Tab = "analytics" | "inquiries" | "contracts" | "invoices";
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: "analytics", label: "Analytics" },
+  { id: "inquiries", label: "Inquiries" },
+  { id: "contracts", label: "Contracts" },
+  { id: "invoices", label: "Invoices" },
+];
+
+function tabFromHash(): Tab {
+  const hash = window.location.hash.slice(1);
+  return TABS.some((tab) => tab.id === hash) ? (hash as Tab) : "analytics";
+}
 
 /**
  * Admin shell for `/admin`.
@@ -16,12 +31,20 @@ type Tab = "analytics" | "inquiries";
 export default function AdminApp() {
   const [email, setEmail] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
-  const [tab, setTab] = useState<Tab>(
-    window.location.hash === "#inquiries" ? "inquiries" : "analytics",
-  );
+  const [tab, setTab] = useState<Tab>(tabFromHash);
   const [unread, setUnread] = useState(0);
+  const [theme, setTheme] = useState<Theme>(storedTheme);
+  // Cross-tab hand-offs: an inquiry starts a contract, a contract starts an invoice.
+  const [contractPrefill, setContractPrefill] = useState<ContractPrefill | null>(null);
+  const [invoicePrefill, setInvoicePrefill] = useState<Partial<InvoiceDraft> | null>(null);
+  const [openInvoiceId, setOpenInvoiceId] = useState<number | null>(null);
 
   const onUnauthorized = useCallback(() => setExpired(true), []);
+  const clearContractPrefill = useCallback(() => setContractPrefill(null), []);
+  const clearInvoiceIntent = useCallback(() => {
+    setInvoicePrefill(null);
+    setOpenInvoiceId(null);
+  }, []);
 
   useEffect(() => {
     document.title = "Dashboard — Thomas Meiss Video";
@@ -34,7 +57,7 @@ export default function AdminApp() {
   }, []);
 
   useEffect(() => {
-    window.location.hash = tab === "inquiries" ? "#inquiries" : "";
+    window.location.hash = tab === "analytics" ? "" : `#${tab}`;
   }, [tab]);
 
   if (expired) {
@@ -70,22 +93,32 @@ export default function AdminApp() {
             Thomas Meiss Video <span className="text-bone-muted">/ Dashboard</span>
           </h1>
 
-          <nav aria-label="Dashboard sections" className="flex gap-2">
-            <TabButton active={tab === "analytics"} onClick={() => setTab("analytics")}>
-              Analytics
-            </TabButton>
-            <TabButton active={tab === "inquiries"} onClick={() => setTab("inquiries")}>
-              Inquiries
-              {unread > 0 && (
-                <span className="ml-2 rounded-full bg-accent/25 px-2 py-0.5 text-[10px] tabular-nums text-accent-light">
-                  {unread}
-                </span>
-              )}
-            </TabButton>
+          <nav aria-label="Dashboard sections" className="flex flex-wrap gap-2">
+            {TABS.map((item) => (
+              <TabButton key={item.id} active={tab === item.id} onClick={() => setTab(item.id)}>
+                {item.label}
+                {item.id === "inquiries" && unread > 0 && (
+                  <span className="ml-2 rounded-full bg-accent/25 px-2 py-0.5 text-[10px] tabular-nums text-accent-light">
+                    {unread}
+                  </span>
+                )}
+              </TabButton>
+            ))}
           </nav>
 
           <div className="ml-auto flex items-center gap-4 font-body text-xs text-bone-muted">
             {email && <span className="hidden sm:inline">{email}</span>}
+            <button
+              type="button"
+              onClick={() => {
+                const next = theme === "light" ? "dark" : "light";
+                saveTheme(next);
+                setTheme(next);
+              }}
+              className="link-underline min-h-11 hover:text-bone focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              {theme === "light" ? "Dark mode" : "Light mode"}
+            </button>
             <a href="/" className="link-underline hover:text-bone">
               View site
             </a>
@@ -97,10 +130,39 @@ export default function AdminApp() {
       </header>
 
       <main id="admin-main" className="mx-auto max-w-6xl px-6 py-8">
-        {tab === "analytics" ? (
-          <Overview onUnauthorized={onUnauthorized} />
-        ) : (
-          <Submissions onUnauthorized={onUnauthorized} onUnreadChange={setUnread} />
+        {tab === "analytics" && <Overview onUnauthorized={onUnauthorized} />}
+        {tab === "inquiries" && (
+          <Submissions
+            onUnauthorized={onUnauthorized}
+            onUnreadChange={setUnread}
+            onDraftContract={(prefill) => {
+              setContractPrefill(prefill);
+              setTab("contracts");
+            }}
+          />
+        )}
+        {tab === "contracts" && (
+          <Contracts
+            prefill={contractPrefill}
+            onPrefillUsed={clearContractPrefill}
+            onCreateInvoice={(draft) => {
+              setInvoicePrefill(draft);
+              setTab("invoices");
+            }}
+            onOpenInvoice={(id) => {
+              setOpenInvoiceId(id);
+              setTab("invoices");
+            }}
+            onUnauthorized={onUnauthorized}
+          />
+        )}
+        {tab === "invoices" && (
+          <Invoices
+            prefill={invoicePrefill}
+            openId={openInvoiceId}
+            onIntentUsed={clearInvoiceIntent}
+            onUnauthorized={onUnauthorized}
+          />
         )}
       </main>
     </div>

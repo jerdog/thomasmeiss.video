@@ -8,6 +8,7 @@ import {
   type SubmissionStatus,
 } from "../api";
 import { countryName, dateTime } from "../format";
+import type { ContractPrefill } from "./Contracts";
 
 type Filter = SubmissionStatus | "all";
 
@@ -21,9 +22,11 @@ const FILTERS: { value: Filter; label: string }[] = [
 export function Submissions({
   onUnauthorized,
   onUnreadChange,
+  onDraftContract,
 }: {
   onUnauthorized: () => void;
   onUnreadChange: (unread: number) => void;
+  onDraftContract: (prefill: ContractPrefill) => void;
 }) {
   const [filter, setFilter] = useState<Filter>("new");
   const [items, setItems] = useState<Submission[]>([]);
@@ -142,7 +145,7 @@ export function Submissions({
       </div>
 
       {error && (
-        <p className="rounded border border-red-400/50 bg-red-400/10 p-4 font-body text-sm text-red-200" role="alert">
+        <p className="rounded border border-danger/50 bg-danger/10 p-4 font-body text-sm text-danger" role="alert">
           {error}
         </p>
       )}
@@ -211,6 +214,17 @@ export function Submissions({
                           {submission.referrer ? ` · ${submission.referrer}` : ""}
                         </dd>
                       </div>
+                      <div>
+                        <dt className="text-xs uppercase tracking-widest text-bone-muted">
+                          Heard about you
+                        </dt>
+                        <dd className="text-bone">
+                          {submission.heard_about ?? "Not answered"}
+                          {submission.heard_about_detail
+                            ? ` — ${submission.heard_about_detail}`
+                            : ""}
+                        </dd>
+                      </div>
                     </dl>
 
                     <p className="mt-4 whitespace-pre-wrap font-body text-sm leading-relaxed text-bone">
@@ -218,13 +232,33 @@ export function Submissions({
                     </p>
 
                     {submission.email_status === "failed" && (
-                      <p className="mt-4 rounded border border-amber-400/50 bg-amber-400/10 p-3 font-body text-xs text-amber-200">
+                      <p className="mt-4 rounded border border-warning/50 bg-warning/10 p-3 font-body text-xs text-warning">
                         ⚠ Email notification failed{submission.email_error ? `: ${submission.email_error}` : ""}.
                         The inquiry was still saved here.
                       </p>
                     )}
 
                     <div className="mt-4 flex flex-wrap gap-2">
+                      <ActionButton
+                        onClick={() =>
+                          onDraftContract({
+                            submissionId: submission.id,
+                            answers: {
+                              client: {
+                                name: submission.name,
+                                email: submission.email,
+                                company: "",
+                                phone: "",
+                                address: "",
+                              },
+                              projectType:
+                                submission.project_type === "Other" ? "" : submission.project_type,
+                            },
+                          })
+                        }
+                      >
+                        Draft contract
+                      </ActionButton>
                       {submission.status !== "read" && (
                         <ActionButton onClick={() => changeStatus(submission, "read")}>
                           Mark as read
@@ -281,7 +315,7 @@ function ActionButton({
       onClick={onClick}
       className={`min-h-11 rounded-full border px-4 font-body text-xs uppercase tracking-widest transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
         destructive
-          ? "border-red-400/50 text-red-300 hover:bg-red-400/10"
+          ? "border-danger/50 text-danger hover:bg-danger/10"
           : "border-border text-bone-muted hover:border-border-strong hover:text-bone"
       }`}
     >

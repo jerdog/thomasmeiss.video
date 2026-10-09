@@ -70,7 +70,7 @@ export function Overview({ onUnauthorized }: { onUnauthorized: () => void }) {
       </div>
 
       {error && (
-        <p className="rounded border border-red-400/50 bg-red-400/10 p-4 font-body text-sm text-red-200" role="alert">
+        <p className="rounded border border-danger/50 bg-danger/10 p-4 font-body text-sm text-danger" role="alert">
           {error}
         </p>
       )}
@@ -138,6 +138,12 @@ export function Overview({ onUnauthorized }: { onUnauthorized: () => void }) {
                 items={data.breakdowns.devices}
                 total={data.totals.views}
                 formatKey={(key) => key.charAt(0).toUpperCase() + key.slice(1)}
+              />
+              <BarList
+                title="How inquiries heard about you"
+                items={data.breakdowns.heardAbout}
+                total={data.totals.submissions}
+                emptyMessage="No answers in this range yet."
               />
             </div>
           </div>

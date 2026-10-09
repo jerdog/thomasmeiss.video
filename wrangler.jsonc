@@ -24,9 +24,13 @@
 			// to the verified inbox, which is why sending to it failed with
 			// "destination address is not a verified address".
 			//
-			// If thomasmeiss.video is ever onboarded as a sending domain, that check
-			// disappears and any recipient becomes reachable — add an explicit
-			// allow-list here at that point.
+			// Contracts and invoices email clients at arbitrary addresses, which
+			// needs thomasmeiss.video onboarded as a sending domain — at which point
+			// that check disappears and any recipient is reachable. No allow-list
+			// can name every client, so the gate is in code instead: the public
+			// contact route only ever sends to CONTACT_TO, and client email is sent
+			// only from authenticated /api/admin routes or to the one client of a
+			// contract being signed (worker/lib/billing.ts).
 			// Set remote: true after wrangler login to send real emails in dev
 		}
 	],

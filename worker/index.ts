@@ -2,6 +2,7 @@ import { pruneAnalytics } from "./lib/db";
 import { handleAdmin } from "./routes/admin";
 import { handleCollect } from "./routes/collect";
 import { handleContact } from "./routes/contact";
+import { handleSign } from "./routes/sign";
 import { handleVitals } from "./routes/vitals";
 
 export default {
@@ -18,6 +19,10 @@ export default {
 
     if (url.pathname === "/api/vitals") {
       return handleVitals(request, env, ctx);
+    }
+
+    if (url.pathname.startsWith("/api/sign/")) {
+      return handleSign(request, env, ctx, url);
     }
 
     if (url.pathname === "/api/admin" || url.pathname.startsWith("/api/admin/")) {
