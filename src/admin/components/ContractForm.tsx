@@ -442,7 +442,7 @@ export function ContractForm({
           <h3 id={`${id}-preview`} className="mb-3 font-body text-xs uppercase tracking-widest text-bone-muted">
             Preview
           </h3>
-          <ContractPaper doc={doc} preview />
+          <ContractPaper doc={doc} preview layout="page" layoutToggle />
         </div>
       </div>
     </div>

@@ -220,7 +220,11 @@ function Contract({
       </div>
 
       <div className="mt-6">
-        <ContractPaper doc={contract.document} signature={signature} />
+        <ContractPaper
+          doc={contract.document}
+          signature={signature}
+          signHint={contract.status === "sent" ? "Sign using the form below this agreement" : undefined}
+        />
       </div>
 
       {children}

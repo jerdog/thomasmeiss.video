@@ -198,10 +198,18 @@ renders the admin preview and the Worker's copy, so they cannot drift. Rules:
   "may not" lists). The clause and the questionnaire's summary panel both
   render from it — edit there, never in one place only.
 - **Printed contracts fit one US Letter page** at 0.5in margins: print CSS in
-  `index.css` sets 9.5pt EB Garamond in two columns with run-in headings and
-  inline lists (same words, denser layout). A worst-case contract measures
-  ~875 of 960px. Adding clause text eats that headroom — re-check the page
+  `index.css` sets 9.25pt EB Garamond in two columns with run-in headings and
+  inline lists (same words, denser layout), then a full-width signature block
+  with a ruled signature, printed-name and date line per party. A worst-case
+  contract measures ~900 of 960px. Adding clause text eats that headroom — re-check the page
   count when you do.
+- The admin shows contracts in a **page view** that is the print layout: the
+  `page-layout` custom variant in `index.css` emits each rule twice, for
+  `@media print` and for `[data-layout="page"]`, and `PageSheet` draws a true
+  816×1056px Letter sheet scaled to fit, warning when it runs past one page.
+  Edit layout rules inside that variant only, so preview and print can't
+  diverge. `/sign` defaults to the reading view (a scaled page is unreadable on
+  a phone) but still prints the page layout.
 - Printing works by `display: none` on everything that is not, and does not
   contain, `.print-doc`. Don't go back to `visibility: hidden` + absolute
   positioning: Chromium then stops balancing the columns.
