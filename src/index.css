@@ -179,13 +179,14 @@
     margin: 0.5in;
   }
 
-  /* One page, same words: 9.5pt EB Garamond in two columns, with run-in
+  /* One page, same words: 9.25pt EB Garamond in two columns, with run-in
      section headings and inline lists so no line is left half-empty. A
-     worst-case contract (description, extra deliverables, additional terms)
-     measures ~875px of the 960px a Letter page has at 0.5in margins. */
+     worst-case contract (description, extra deliverables, additional terms),
+     signature block included, measures ~900px of the 960px a Letter page has
+     at 0.5in margins. */
   .contract-paper {
     font-family: var(--font-display);
-    font-size: 9.5pt;
+    font-size: 9.25pt;
     line-height: 1.3;
   }
 
@@ -241,7 +242,79 @@
 
   .contract-paper .contract-signatures {
     margin-top: 0.8em;
-    padding-top: 0.6em;
+    padding-top: 0.5em;
     break-inside: avoid;
+  }
+
+  /* Signatures: same ruled lines as on screen, packed tighter. The heading runs
+     into its sentence, role and party share a line, and the "Signed at" stamp
+     is dropped because the Date line already carries it. */
+  .contract-paper .contract-signatures > h3,
+  .contract-paper .contract-signatures > p {
+    display: inline;
+    margin: 0;
+    font-size: 1em;
+  }
+
+  .contract-paper .contract-signatures > h3 {
+    font-weight: 700;
+  }
+
+  .contract-paper .contract-signatures > h3::after {
+    content: " — ";
+    font-weight: 400;
+  }
+
+  .contract-paper .contract-signature-grid {
+    margin-top: 0.4em;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3in;
+  }
+
+  /* The ruled lines mark where to sign; the card box is screen-only. */
+  .contract-paper .contract-signature {
+    border: 0;
+    padding: 0;
+  }
+
+  .contract-paper .contract-signature .text-xs {
+    font-size: 0.8em;
+  }
+
+  .contract-paper .contract-signature .text-sm {
+    font-size: 1em;
+  }
+
+  .contract-paper .sig-role,
+  .contract-paper .sig-party {
+    display: inline;
+    margin: 0;
+  }
+
+  .contract-paper .sig-role::after {
+    content: " · ";
+  }
+
+  /* Room to sign a printed copy by hand. */
+  .contract-paper .contract-signature-line {
+    height: 0.35in;
+    margin-top: 0.2em;
+  }
+
+  .contract-paper .sig-caption {
+    margin-top: 0.15em;
+  }
+
+  .contract-paper .sig-fields {
+    margin-top: 0.2em;
+    gap: 0.2in;
+  }
+
+  .contract-paper .sig-fields .min-h-6 {
+    min-height: 1.3em;
+  }
+
+  .contract-paper .sig-stamp {
+    display: none;
   }
 }

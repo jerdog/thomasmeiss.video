@@ -9,11 +9,14 @@ export function ContractPaper({
   doc,
   signature,
   preview = false,
+  signHint,
 }: {
   doc: ContractDocument;
   signature?: { name: string; signedAt: number } | null;
   /** Marks a live draft preview so it is never mistaken for the sent text. */
   preview?: boolean;
+  /** Shown on the client's empty signature line, e.g. where to sign online. */
+  signHint?: string;
 }) {
   return (
     <article
@@ -51,30 +54,87 @@ export function ContractPaper({
         ))}
       </div>
 
-      <section className="contract-signatures mt-8 grid gap-8 border-t border-neutral-300 pt-6 sm:grid-cols-2">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-neutral-600">Producer</p>
-          <p className="mt-2 font-display text-lg">{doc.providerName}</p>
-        </div>
-        <div>
-          <p className="text-xs uppercase tracking-widest text-neutral-600">Client</p>
-          {signature ? (
-            <>
-              <p className="mt-2 font-display text-2xl italic">{signature.name}</p>
-              <p className="text-sm text-neutral-700">
-                Signed electronically for {doc.clientName}
-                <br />
-                {new Date(signature.signedAt * 1000).toLocaleString(undefined, {
-                  dateStyle: "long",
-                  timeStyle: "short",
-                })}
-              </p>
-            </>
-          ) : (
-            <p className="mt-2 text-sm text-neutral-600">{doc.clientName} — not yet signed</p>
-          )}
+      <section
+        className="contract-signatures mt-10 border-t-2 border-neutral-800 pt-5"
+        aria-labelledby="contract-signatures-heading"
+      >
+        <h3 id="contract-signatures-heading" className="font-display text-xl text-neutral-950">
+          Signatures
+        </h3>
+        <p className="mt-1 text-sm text-neutral-700">
+          By signing below, each party agrees to the terms of this Agreement.
+        </p>
+        <div className="contract-signature-grid mt-4 grid gap-6 sm:grid-cols-2">
+          <SignatureBlock role="Producer" party={doc.providerName} signature={null} />
+          <SignatureBlock
+            role="Client"
+            party={doc.clientName}
+            signature={signature ?? null}
+            hint={signHint}
+          />
         </div>
       </section>
     </article>
+  );
+}
+
+/**
+ * One party's signature area: a ruled signature line plus printed name and
+ * date lines, so it is obvious where each party signs — on screen and on a
+ * printed copy signed by hand. An electronic signature fills the lines in.
+ */
+function SignatureBlock({
+  role,
+  party,
+  signature,
+  hint,
+}: {
+  role: string;
+  party: string;
+  signature: { name: string; signedAt: number } | null;
+  hint?: string;
+}) {
+  const signedOn = signature
+    ? new Date(signature.signedAt * 1000).toLocaleDateString(undefined, { dateStyle: "long" })
+    : "";
+
+  return (
+    <div className="contract-signature rounded border border-neutral-400 p-4">
+      <p className="sig-role text-xs font-semibold uppercase tracking-widest text-neutral-700">{role}</p>
+      <p className="sig-party mt-0.5 text-sm text-neutral-900">{party}</p>
+
+      <div className="contract-signature-line mt-4 flex h-14 items-end border-b-2 border-neutral-800 pb-1">
+        {signature ? (
+          <span className="font-display text-2xl italic leading-none text-neutral-950">{signature.name}</span>
+        ) : (
+          hint && <span className="text-xs italic text-neutral-500 print:hidden">{hint}</span>
+        )}
+      </div>
+      <p className="sig-caption mt-1 text-xs text-neutral-600">
+        Signature{signature ? " (signed electronically)" : ""}
+      </p>
+
+      <div className="sig-fields mt-4 grid grid-cols-[1fr_auto] gap-4">
+        <div>
+          <p className="min-h-6 border-b border-neutral-500 pb-0.5 text-sm text-neutral-900">
+            {signature?.name ?? ""}
+          </p>
+          <p className="mt-1 text-xs text-neutral-600">Printed name</p>
+        </div>
+        <div className="w-36">
+          <p className="min-h-6 border-b border-neutral-500 pb-0.5 text-sm text-neutral-900">{signedOn}</p>
+          <p className="mt-1 text-xs text-neutral-600">Date</p>
+        </div>
+      </div>
+      {signature && (
+        <p className="sig-stamp mt-2 text-xs text-neutral-600">
+          Signed{" "}
+          {new Date(signature.signedAt * 1000).toLocaleString(undefined, {
+            dateStyle: "long",
+            timeStyle: "short",
+          })}
+        </p>
+      )}
+    </div>
   );
 }

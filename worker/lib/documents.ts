@@ -65,11 +65,29 @@ export function contractHtml(doc: ContractDocument, signature: Signature | null)
     })
     .join("");
 
-  const signed = signature
-    ? `<hr style="border:none;border-top:1px solid #ddd;margin:28px 0;" />
-<p><strong>Signed electronically by ${escapeHtml(signature.name)}</strong> for ${escapeHtml(doc.clientName)}<br />
-${escapeHtml(new Date(signature.signedAt * 1000).toUTCString())}</p>`
-    : "";
+  const line = "border-bottom:2px solid #1d1d1f;height:40px;vertical-align:bottom;padding:0 0 4px;";
+  const caption = "font-size:11px;color:#666;padding:4px 0 12px;";
+  const block = (role: string, party: string, sig: Signature | null) => `
+<td style="width:50%;vertical-align:top;padding:12px;border:1px solid #bbb;">
+<div style="font-size:11px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#555;">${role}</div>
+<div style="font-size:13px;">${escapeHtml(party)}</div>
+<table style="width:100%;border-collapse:collapse;margin-top:8px;">
+<tr><td style="${line}${FONT}font-size:22px;font-style:italic;">${sig ? escapeHtml(sig.name) : "&nbsp;"}</td></tr>
+<tr><td style="${caption}">Signature${sig ? " (signed electronically)" : ""}</td></tr>
+<tr><td style="border-bottom:1px solid #888;height:20px;font-size:13px;">${sig ? escapeHtml(sig.name) : "&nbsp;"}</td></tr>
+<tr><td style="${caption}">Printed name</td></tr>
+<tr><td style="border-bottom:1px solid #888;height:20px;font-size:13px;">${sig ? escapeHtml(new Date(sig.signedAt * 1000).toUTCString()) : "&nbsp;"}</td></tr>
+<tr><td style="${caption}">Date</td></tr>
+</table></td>`;
+
+  // Same layout as the printable page: a clearly ruled area for each party.
+  const signed = `<hr style="border:none;border-top:2px solid #1d1d1f;margin:28px 0 8px;" />
+<h3 style="${FONT}font-size:17px;margin:0 0 4px;">Signatures</h3>
+<p style="margin:0 0 12px;font-size:13px;color:#444;">By signing below, each party agrees to the terms of this Agreement.</p>
+<table style="width:100%;border-collapse:separate;border-spacing:8px 0;"><tr>
+${block("Producer", doc.providerName, null)}
+${block("Client", doc.clientName, signature)}
+</tr></table>`;
 
   return `<h2 style="${FONT}font-size:24px;margin:0 0 16px;">${escapeHtml(doc.title)}</h2>
 <p>${escapeHtml(doc.intro)}</p>${sections}${signed}`;
