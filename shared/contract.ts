@@ -36,21 +36,60 @@ export const BALANCE_TERMS = [
 
 export type BalanceTerms = (typeof BALANCE_TERMS)[number]["id"];
 
+/**
+ * Usage rights. Each option carries the ownership statement and the lists of
+ * what the client may and may not do: the contract clause is assembled from
+ * these, and the questionnaire shows the same lists, so the two always agree.
+ */
 export const USAGE_RIGHTS = [
   {
     id: "standard",
     label: "Standard license",
-    hint: "Client's own promotion and social media; no paid ads or resale",
+    hint: "Client's own channels and events — no paid ads, broadcast, or resale",
+    ownership:
+      "Producer keeps the copyright in all footage and finished videos. Once paid in full, Client receives a perpetual, non-exclusive license to use the finished videos as follows.",
+    clientMay: [
+      "Post them on Client's own website and social media accounts (unpaid posts)",
+      "Show them at Client's events, banquets, meetings, and presentations",
+      "Share them with Client's members, staff, athletes, families, and recruits",
+      "Trim or reformat them to fit a platform (for example, a vertical crop or a shorter cut)",
+    ],
+    clientMayNot: [
+      "Run them as paid advertising, including boosted or sponsored posts",
+      "Broadcast them on television or streaming services",
+      "Sell, sublicense, or give them to a third party to use for its own purposes",
+      "Re-edit them in a way that changes their meaning or removes Producer's credit",
+    ],
   },
   {
     id: "commercial",
     label: "Commercial license",
-    hint: "Adds paid advertising and broadcast",
+    hint: "Standard, plus paid advertising, broadcast, and marketing materials",
+    ownership:
+      "Producer keeps the copyright in all footage and finished videos. Once paid in full, Client receives a perpetual, non-exclusive license to use the finished videos for Client's own commercial purposes, as follows.",
+    clientMay: [
+      "Everything allowed under a standard license",
+      "Run them as paid advertising on any platform, including boosted and sponsored posts",
+      "Broadcast or stream them, and show them on in-venue screens",
+      "Use them in marketing materials, trade shows, and promotion of Client's products or services",
+      "Re-edit them into shorter or alternate versions for Client's own marketing",
+    ],
+    clientMayNot: [
+      "Sell, sublicense, or license them to a third party (including sponsors) as standalone works",
+      "Claim authorship of the videos",
+    ],
   },
   {
     id: "buyout",
     label: "Full buyout",
-    hint: "Copyright in the finished videos transfers to the client",
+    hint: "Client owns the finished videos outright and may use them any way",
+    ownership:
+      "Once paid in full, Producer assigns to Client all copyright in the finished videos, and in any raw footage delivered under this Agreement. Until then, Producer keeps all rights. Producer keeps the copyright in footage that is not delivered.",
+    clientMay: [
+      "Use, edit, sell, license, or transfer the finished videos for any purpose",
+      "Register the copyright in Client's own name",
+    ],
+    clientMayNot: [] as string[],
   },
 ] as const;
 
@@ -93,7 +132,13 @@ export interface ContractAnswers {
   /** Monthly late fee, percent. 0 means none. */
   lateFeePercent: number;
   usage: UsageRights;
+  /** Producer may show the finished videos as Client's work (portfolio, showreel). */
   portfolioUse: boolean;
+  /**
+   * Producer may use any footage from the project in its own promotion, without
+   * featuring Client's identity or implying endorsement.
+   */
+  promotionalUse: boolean;
   rawFootage: boolean;
   clientObtainsReleases: boolean;
   cancellation: CancellationPolicy;
@@ -139,6 +184,7 @@ export function emptyAnswers(): ContractAnswers {
     lateFeePercent: 0,
     usage: "standard",
     portfolioUse: true,
+    promotionalUse: true,
     rawFootage: false,
     clientObtainsReleases: true,
     cancellation: "standard",
@@ -193,6 +239,9 @@ export function normalizeAnswers(input: unknown): {
     lateFeePercent: Math.min(10, Math.max(0, Number(raw.lateFeePercent) || 0)),
     usage: oneOf(raw.usage, USAGE_RIGHTS, defaults.usage),
     portfolioUse: raw.portfolioUse === undefined ? defaults.portfolioUse : Boolean(raw.portfolioUse),
+    // Drafts saved before this option existed default to on, like new ones.
+    promotionalUse:
+      raw.promotionalUse === undefined ? defaults.promotionalUse : Boolean(raw.promotionalUse),
     rawFootage: Boolean(raw.rawFootage),
     clientObtainsReleases:
       raw.clientObtainsReleases === undefined
@@ -330,16 +379,45 @@ export function renderContract(
   });
 
   // 6. Usage rights and ownership
-  const usageBlocks = [p(usageText(answers.usage))];
+  const usage = USAGE_RIGHTS.find((option) => option.id === answers.usage) ?? USAGE_RIGHTS[0];
+  const usageBlocks: ContractBlock[] = [
+    p(usage.ownership),
+    p(answers.usage === "buyout" ? "After that, Client may:" : "Client may:"),
+    { kind: "list", items: [...usage.clientMay] },
+  ];
+  if (usage.clientMayNot.length > 0) {
+    usageBlocks.push(
+      p("Without a separate written license from Producer, Client may not:"),
+      { kind: "list", items: [...usage.clientMayNot] },
+    );
+  }
+  if (answers.usage === "buyout" && (answers.portfolioUse || answers.promotionalUse)) {
+    // Client owns the finished videos, so Producer's own uses need a license back.
+    usageBlocks.push(p("Client grants Producer a perpetual, non-exclusive license to use the finished videos for the purposes described in the paragraphs below."));
+  }
   usageBlocks.push(
     p(
       answers.portfolioUse
-        ? "Producer may use the finished videos, and stills from them, in Producer's portfolio, website, showreel, and social media."
-        : "Producer will not publicly display the finished videos without Client's written permission.",
+        ? "Portfolio: Producer may show the finished videos, and stills from them, as examples of Producer's work for Client — in Producer's portfolio, website, showreel, and social media — and may name Client as a client."
+        : "Portfolio: Producer will not publicly display the finished videos, or name Client as a client, without Client's written permission.",
     ),
   );
+  if (answers.promotionalUse) {
+    usageBlocks.push(
+      p("Promotional use: Producer may use footage captured for this project, including footage that does not appear in the finished videos, in Producer's own promotional material — such as showreels, sample edits, website and social media posts, and advertising for Producer's services."),
+      p("In that material, Client's name, logos, uniforms, and the people filmed may appear incidentally, but Producer will not feature them prominently, present Client or anyone filmed as endorsing or being affiliated with Producer, or edit footage in a way that misrepresents Client, its people, or its events. Producer will not use footage Client has identified in writing as confidential, and will stop using a specific clip in new material within 14 days of Client's reasonable written request."),
+    );
+  } else {
+    usageBlocks.push(
+      p(
+        answers.portfolioUse
+          ? "Promotional use: apart from the portfolio use above, Producer will not use footage from this project in Producer's own promotional material without Client's written permission."
+          : "Promotional use: Producer will not use footage from this project in Producer's own promotional material without Client's written permission.",
+      ),
+    );
+  }
   usageBlocks.push(p("Licensed music and stock media are used under the terms of their licenses, which may limit where the finished videos can be published."));
-  sections.push({ heading: "Usage Rights and Ownership", blocks: usageBlocks });
+  sections.push({ heading: "Usage Rights", blocks: usageBlocks });
 
   // 7. Client responsibilities
   sections.push({
@@ -434,17 +512,6 @@ function cancellationText(policy: CancellationPolicy): string {
       return "The deposit is non-refundable. If Client cancels within 14 days of the first production date, 50% of the total fee is due, less any deposit already paid.";
     case "strict":
       return "Payments are non-refundable once this Agreement is signed. If Client cancels within 30 days of the first production date, the full fee is due.";
-  }
-}
-
-function usageText(usage: UsageRights): string {
-  switch (usage) {
-    case "standard":
-      return "Producer keeps the copyright in all footage and finished videos. Once paid in full, Client receives a perpetual, non-exclusive license to use the finished videos for Client's own promotion, website, and social media. Paid advertising, broadcast, and resale require a separate license.";
-    case "commercial":
-      return "Producer keeps the copyright in all footage and finished videos. Once paid in full, Client receives a perpetual, non-exclusive license to use the finished videos for any commercial purpose, including paid advertising and broadcast. Client may not resell or sublicense the videos as standalone works.";
-    case "buyout":
-      return "Once paid in full, Producer assigns to Client all copyright in the finished videos. Producer keeps the copyright in raw footage that is not delivered.";
   }
 }
 

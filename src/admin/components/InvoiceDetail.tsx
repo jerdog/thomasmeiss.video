@@ -17,6 +17,7 @@ import {
   StatusBadge,
   emailFailureHint,
   todayLocal,
+  useFocusOnMount,
 } from "./ui";
 
 export function InvoiceDetail({
@@ -34,6 +35,7 @@ export function InvoiceDetail({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const headingRef = useFocusOnMount<HTMLHeadingElement>(invoice !== null);
 
   const load = useCallback(async () => {
     try {
@@ -86,7 +88,7 @@ export function InvoiceDetail({
       <BackButton onClick={onBack}>Invoices</BackButton>
 
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="font-display text-2xl tabular-nums text-bone">Invoice {invoice.number}</h2>
+        <h2 ref={headingRef} tabIndex={-1} className="outline-none font-display text-2xl tabular-nums text-bone">Invoice {invoice.number}</h2>
         <StatusBadge status={overdue ? "overdue" : status} />
       </div>
 
@@ -134,7 +136,14 @@ export function InvoiceDetail({
             >
               Send reminder
             </Button>
-            <Button disabled={busy} onClick={() => void run("send", "Invoice re-sent.")}>
+            <Button
+              disabled={busy}
+              onClick={() => {
+                if (window.confirm(`Email invoice ${invoice.number} to ${invoice.client.email} again?`)) {
+                  void run("send", "Invoice re-sent.");
+                }
+              }}
+            >
               Resend invoice
             </Button>
           </>

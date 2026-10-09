@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { emptyAnswers, type ContractAnswers } from "../../../shared/contract";
 import { formatCents } from "../../../shared/money";
 import {
@@ -48,6 +48,13 @@ export function Contracts({
   onUnauthorized: () => void;
 }) {
   const [view, setView] = useState<View>({ mode: "list" });
+  // Back from a detail or form view: focus the list heading (WCAG 2.4.3).
+  const listHeadingRef = useRef<HTMLHeadingElement>(null);
+  const previousMode = useRef(view.mode);
+  useEffect(() => {
+    if (view.mode === "list" && previousMode.current !== "list") listHeadingRef.current?.focus();
+    previousMode.current = view.mode;
+  }, [view.mode]);
   const [filter, setFilter] = useState<Filter>("all");
   const [items, setItems] = useState<ContractSummary[]>([]);
   const [counts, setCounts] = useState<Partial<Record<Filter, number>>>({});
@@ -127,7 +134,9 @@ export function Contracts({
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-2xl text-bone">Contracts</h2>
+        <h2 ref={listHeadingRef} tabIndex={-1} className="font-display text-2xl text-bone outline-none">
+          Contracts
+        </h2>
         <Button
           variant="primary"
           onClick={() =>

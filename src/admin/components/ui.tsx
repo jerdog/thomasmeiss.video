@@ -1,12 +1,12 @@
 /** Small form and action primitives shared by the contract and invoice views. */
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 const FOCUS =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 export const inputClass =
-  "w-full rounded-none border border-border-strong bg-transparent px-3 py-2.5 font-body text-sm text-bone placeholder:text-bone-muted/60 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent";
+  "min-h-11 w-full rounded-none border border-border-strong bg-transparent px-3 py-2.5 font-body text-sm text-bone placeholder:text-bone-muted/60 focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent";
 
 export const labelClass = "mb-1.5 block font-body text-xs uppercase tracking-widest text-bone-muted";
 
@@ -78,7 +78,7 @@ export function FilterButtons<T extends string>({
 }
 
 const BADGE_STYLES: Record<string, string> = {
-  draft: "bg-bone/10 text-bone-muted",
+  draft: "bg-bone/10 text-bone",
   sent: "bg-accent/20 text-accent-light",
   signed: "bg-success/15 text-success",
   paid: "bg-success/15 text-success",
@@ -138,6 +138,42 @@ export function emailFailureHint(error: string): string {
   return /verified|destination/i.test(error)
     ? `${error} — Cloudflare can only email verified addresses until thomasmeiss.video is onboarded for Email Sending (see README → Contracts and invoices).`
     : error;
+}
+
+/** Applied with aria-invalid: a red border that does not rely on colour alone (the message says it). */
+export const invalidClass = "border-danger focus:border-danger";
+
+export function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p id={id} className="mt-1.5 font-body text-xs text-danger">
+      {message}
+    </p>
+  );
+}
+
+/**
+ * Move focus to a view's heading when the view replaces another (WCAG 2.4.3):
+ * otherwise focus stays on the button that was just removed and falls back to
+ * <body>, and a screen reader is left with no idea the screen changed.
+ */
+export function useFocusOnMount<T extends HTMLElement>(enabled = true) {
+  const ref = useRef<T>(null);
+  useEffect(() => {
+    if (enabled) ref.current?.focus();
+  }, [enabled]);
+  return ref;
+}
+
+/** Focus the first field the user needs to fix. */
+export function focusFirst(ids: string[]): void {
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.focus();
+      return;
+    }
+  }
 }
 
 export function todayLocal(): string {

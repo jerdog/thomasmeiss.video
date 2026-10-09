@@ -9,7 +9,19 @@ import {
 } from "../../../shared/money";
 import { saveInvoice, UnauthorizedError, type InvoiceDraft } from "../api";
 import { ClientFields } from "./ClientFields";
-import { BackButton, Button, ErrorBanner, inputClass, labelClass } from "./ui";
+import {
+  BackButton,
+  Button,
+  ErrorBanner,
+  FieldError,
+  focusFirst,
+  inputClass,
+  invalidClass,
+  labelClass,
+  useFocusOnMount,
+} from "./ui";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Line items are edited as strings so a half-typed "12." is not reformatted away. */
 interface ItemInput {
@@ -56,6 +68,9 @@ export function InvoiceForm({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // Keyed by field id suffix: "client-name", "due", "desc-0", "rate-2", …
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const headingRef = useFocusOnMount<HTMLHeadingElement>();
 
   const parsedItems = items.map(toItem);
   const totals = invoiceTotals(parsedItems, draft.taxRate);
@@ -64,8 +79,34 @@ export function InvoiceForm({
     setItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
   }
 
+  /** Field order matters: the first key is the field that receives focus. */
+  function validate(): Record<string, string> {
+    const next: Record<string, string> = {};
+    if (!draft.client.name.trim()) next["client-name"] = "Enter the client's name.";
+    if (!draft.client.email.trim()) next["client-email"] = "Enter the client's email.";
+    else if (!EMAIL_RE.test(draft.client.email.trim())) next["client-email"] = "Enter a valid email, like name@example.com.";
+    if (draft.dueDate && draft.issueDate && draft.dueDate < draft.issueDate) {
+      next.due = "The due date can't be before the issue date.";
+    }
+    items.forEach((item, i) => {
+      const used = item.description.trim() || item.rate.trim();
+      if (used && !item.description.trim()) next[`desc-${i}`] = "Describe this line, or remove it.";
+      if (used && !(Number(item.quantity) > 0)) next[`qty-${i}`] = "Enter a quantity above 0.";
+      if (item.rate.trim() && parseDollars(item.rate) === null) next[`rate-${i}`] = "Enter an amount in dollars, like 250.";
+    });
+    if (!items.some((item) => item.description.trim())) next["desc-0"] ??= "Add at least one line item.";
+    return next;
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const problems = validate();
+    setFieldErrors(problems);
+    const order = ["client-name", "client-email", "due", ...items.flatMap((_, i) => [`desc-${i}`, `qty-${i}`, `rate-${i}`])];
+    if (Object.keys(problems).length > 0) {
+      focusFirst(order.filter((key) => problems[key]).map((key) => `${id}-${key}`));
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -85,12 +126,14 @@ export function InvoiceForm({
   return (
     <div className="space-y-6">
       <BackButton onClick={onCancel}>Invoices</BackButton>
-      <h2 className="font-display text-2xl text-bone">
+      <h2 ref={headingRef} tabIndex={-1} className="font-display text-2xl text-bone outline-none">
         {invoiceId ? `Edit invoice ${number ?? ""}` : "New invoice"}
       </h2>
 
       <form onSubmit={handleSubmit} className="max-w-3xl space-y-10" noValidate>
         <ClientFields
+          idPrefix={`${id}-client`}
+          errors={{ name: fieldErrors["client-name"], email: fieldErrors["client-email"] }}
           value={draft.client}
           onChange={(client) => setDraft((prev) => ({ ...prev, client }))}
           onUnauthorized={onUnauthorized}
@@ -118,11 +161,14 @@ export function InvoiceForm({
               <input
                 id={`${id}-due`}
                 type="date"
-                className={inputClass}
+                className={`${inputClass} ${fieldErrors.due ? invalidClass : ""}`}
                 value={draft.dueDate}
                 min={draft.issueDate}
+                aria-invalid={fieldErrors.due ? true : undefined}
+                aria-describedby={fieldErrors.due ? `${id}-due-error` : undefined}
                 onChange={(e) => setDraft((prev) => ({ ...prev, dueDate: e.target.value }))}
               />
+              <FieldError id={`${id}-due-error`} message={fieldErrors.due} />
             </div>
           </div>
         </fieldset>
@@ -140,39 +186,50 @@ export function InvoiceForm({
                   <div>
                     <label htmlFor={`${id}-desc-${index}`} className={labelClass}>
                       Description
+                      <span className="sr-only">, line {n}</span>
                     </label>
                     <input
                       id={`${id}-desc-${index}`}
-                      className={inputClass}
+                      className={`${inputClass} ${fieldErrors[`desc-${index}`] ? invalidClass : ""}`}
+                      aria-invalid={fieldErrors[`desc-${index}`] ? true : undefined}
+                      aria-describedby={fieldErrors[`desc-${index}`] ? `${id}-desc-${index}-error` : undefined}
                       value={item.description}
                       onChange={(e) => updateItem(index, { description: e.target.value })}
                     />
+                    <FieldError id={`${id}-desc-${index}-error`} message={fieldErrors[`desc-${index}`]} />
                   </div>
                   <div>
                     <label htmlFor={`${id}-qty-${index}`} className={labelClass}>
                       Qty
+                      <span className="sr-only">, line {n}</span>
                     </label>
                     <input
                       id={`${id}-qty-${index}`}
                       inputMode="decimal"
-                      className={inputClass}
+                      className={`${inputClass} ${fieldErrors[`qty-${index}`] ? invalidClass : ""}`}
+                      aria-invalid={fieldErrors[`qty-${index}`] ? true : undefined}
+                      aria-describedby={fieldErrors[`qty-${index}`] ? `${id}-qty-${index}-error` : undefined}
                       value={item.quantity}
                       onChange={(e) => updateItem(index, { quantity: e.target.value })}
                     />
+                    <FieldError id={`${id}-qty-${index}-error`} message={fieldErrors[`qty-${index}`]} />
                   </div>
                   <div>
                     <label htmlFor={`${id}-rate-${index}`} className={labelClass}>
                       Rate (USD)
+                      <span className="sr-only">, line {n}</span>
                     </label>
                     <input
                       id={`${id}-rate-${index}`}
                       inputMode="decimal"
-                      className={inputClass}
+                      className={`${inputClass} ${fieldErrors[`rate-${index}`] ? invalidClass : ""}`}
+                      aria-invalid={fieldErrors[`rate-${index}`] ? true : undefined}
+                      aria-describedby={fieldErrors[`rate-${index}`] ? `${id}-rate-${index}-error` : undefined}
                       value={item.rate}
                       placeholder="0.00"
-                      aria-invalid={item.rate !== "" && parseDollars(item.rate) === null ? true : undefined}
                       onChange={(e) => updateItem(index, { rate: e.target.value })}
                     />
+                    <FieldError id={`${id}-rate-${index}-error`} message={fieldErrors[`rate-${index}`]} />
                   </div>
                   <div className="flex items-end justify-between gap-3 sm:flex-col sm:items-end">
                     <span className="font-body text-sm tabular-nums text-bone">
@@ -181,7 +238,13 @@ export function InvoiceForm({
                     {items.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => setItems((prev) => prev.filter((_, i) => i !== index))}
+                        onClick={() => {
+                          setItems((prev) => prev.filter((_, i) => i !== index));
+                          // The button is about to disappear; keep focus in the list.
+                          requestAnimationFrame(() =>
+                            document.getElementById(`${id}-desc-${Math.max(0, index - 1)}`)?.focus(),
+                          );
+                        }}
                         aria-label={`Remove line ${n}`}
                         className="min-h-11 font-body text-xs uppercase tracking-widest text-danger hover:text-danger focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                       >
@@ -195,7 +258,11 @@ export function InvoiceForm({
           </ol>
           <div className="mt-4">
             <Button
-              onClick={() => setItems((prev) => [...prev, { description: "", quantity: "1", rate: "" }])}
+              onClick={() => {
+                const next = items.length;
+                setItems((prev) => [...prev, { description: "", quantity: "1", rate: "" }]);
+                requestAnimationFrame(() => document.getElementById(`${id}-desc-${next}`)?.focus());
+              }}
             >
               Add line
             </Button>

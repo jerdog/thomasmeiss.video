@@ -16,7 +16,22 @@ import { projectTypes, site } from "../../data/content";
 import { ContractPaper } from "../../documents/ContractPaper";
 import { saveContract, UnauthorizedError } from "../api";
 import { ClientFields } from "./ClientFields";
-import { BackButton, Button, ErrorBanner, inputClass, labelClass, todayLocal } from "./ui";
+import {
+  BackButton,
+  Button,
+  ErrorBanner,
+  FieldError,
+  focusFirst,
+  inputClass,
+  invalidClass,
+  labelClass,
+  todayLocal,
+  useFocusOnMount,
+} from "./ui";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type FieldErrors = Partial<Record<"name" | "email" | "fee" | "travel", string>>;
 
 /**
  * The contract questionnaire. Every answer maps to clause text in
@@ -46,6 +61,8 @@ export function ContractForm({
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const headingRef = useFocusOnMount<HTMLHeadingElement>();
 
   // Amount fields stay strings while typing; the answers carry cents.
   const current: ContractAnswers = {
@@ -70,8 +87,32 @@ export function ContractForm({
     }));
   }
 
+  /**
+   * Only what a draft needs: a client to save it against, and amounts that
+   * parse. Everything else is reported as "before this can be sent" below.
+   */
+  function validate(): FieldErrors {
+    const next: FieldErrors = {};
+    if (!answers.client.name.trim()) next.name = "Enter the client's name.";
+    if (!answers.client.email.trim()) next.email = "Enter the client's email.";
+    else if (!EMAIL_RE.test(answers.client.email.trim())) next.email = "Enter a valid email, like name@example.com.";
+    if (fee.trim() && parseDollars(fee) === null) next.fee = "Enter an amount in dollars, like 1500 or 1,500.00.";
+    if (travel.trim() && parseDollars(travel) === null) next.travel = "Enter an amount in dollars, like 150.";
+    return next;
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const problems = validate();
+    setFieldErrors(problems);
+    if (Object.keys(problems).length > 0) {
+      focusFirst(
+        (["name", "email", "fee", "travel"] as const)
+          .filter((key) => problems[key])
+          .map((key) => (key === "name" || key === "email" ? `${id}-client-${key}` : `${id}-${key}`)),
+      );
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -88,13 +129,15 @@ export function ContractForm({
   return (
     <div className="space-y-6">
       <BackButton onClick={onCancel}>Contracts</BackButton>
-      <h2 className="font-display text-2xl text-bone">
+      <h2 ref={headingRef} tabIndex={-1} className="font-display text-2xl text-bone outline-none">
         {contractId ? "Edit contract" : "New contract"}
       </h2>
 
       <div className="grid gap-8 xl:grid-cols-2">
         <form onSubmit={handleSubmit} className="space-y-10" noValidate>
           <ClientFields
+            idPrefix={`${id}-client`}
+            errors={fieldErrors}
             value={answers.client}
             onChange={(client) => update("client", client)}
             onUnauthorized={onUnauthorized}
@@ -227,12 +270,14 @@ export function ContractForm({
                 <input
                   id={`${id}-fee`}
                   inputMode="decimal"
-                  className={inputClass}
+                  className={`${inputClass} ${fieldErrors.fee ? invalidClass : ""}`}
                   value={fee}
                   onChange={(e) => setFee(e.target.value)}
                   placeholder="0.00"
-                  aria-invalid={fee !== "" && parseDollars(fee) === null ? true : undefined}
+                  aria-invalid={fieldErrors.fee ? true : undefined}
+                  aria-describedby={fieldErrors.fee ? `${id}-fee-error` : undefined}
                 />
+                <FieldError id={`${id}-fee-error`} message={fieldErrors.fee} />
               </div>
               <div>
                 <label htmlFor={`${id}-travel`} className={labelClass}>
@@ -241,12 +286,14 @@ export function ContractForm({
                 <input
                   id={`${id}-travel`}
                   inputMode="decimal"
-                  className={inputClass}
+                  className={`${inputClass} ${fieldErrors.travel ? invalidClass : ""}`}
                   value={travel}
                   onChange={(e) => setTravel(e.target.value)}
                   placeholder="0.00"
-                  aria-invalid={travel !== "" && parseDollars(travel) === null ? true : undefined}
+                  aria-invalid={fieldErrors.travel ? true : undefined}
+                  aria-describedby={fieldErrors.travel ? `${id}-travel-error` : undefined}
                 />
+                <FieldError id={`${id}-travel-error`} message={fieldErrors.travel} />
               </div>
             </div>
 
@@ -309,8 +356,20 @@ export function ContractForm({
               options={USAGE_RIGHTS}
               onChange={(value) => update("usage", value as ContractAnswers["usage"])}
             />
-            <Check checked={answers.portfolioUse} onChange={() => update("portfolioUse", !answers.portfolioUse)}>
-              I may use the work in my portfolio and social media
+            <UsageSummary usage={answers.usage} />
+            <Check
+              checked={answers.portfolioUse}
+              onChange={() => update("portfolioUse", !answers.portfolioUse)}
+              hint="Show the finished videos as work for this client, and name them as a client."
+            >
+              Portfolio use
+            </Check>
+            <Check
+              checked={answers.promotionalUse}
+              onChange={() => update("promotionalUse", !answers.promotionalUse)}
+              hint="Use any footage from the shoot in my own marketing — reels, social posts, ads for my services — without featuring the client's name, logos, or people, or implying they endorse me."
+            >
+              Promotional use of footage
             </Check>
             <Radios
               legend="Cancellation policy"
@@ -373,8 +432,14 @@ export function ContractForm({
           </div>
         </form>
 
-        <div className="xl:sticky xl:top-6 xl:max-h-[calc(100dvh-3rem)] xl:self-start xl:overflow-y-auto">
-          <h3 className="mb-3 font-body text-xs uppercase tracking-widest text-bone-muted">
+        {/* Scrolls on wide screens, so it must be reachable by keyboard (WCAG 2.1.1). */}
+        <div
+          role="region"
+          aria-labelledby={`${id}-preview`}
+          tabIndex={0}
+          className="xl:sticky xl:top-6 xl:max-h-[calc(100dvh-3rem)] xl:self-start xl:overflow-y-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          <h3 id={`${id}-preview`} className="mb-3 font-body text-xs uppercase tracking-widest text-bone-muted">
             Preview
           </h3>
           <ContractPaper doc={doc} preview />
@@ -396,22 +461,62 @@ function Fieldset({ legend, children }: { legend: string; children: ReactNode })
 function Check({
   checked,
   onChange,
+  hint,
   children,
 }: {
   checked: boolean;
   onChange: () => void;
+  hint?: string;
   children: ReactNode;
 }) {
   return (
-    <label className="flex min-h-11 cursor-pointer items-center gap-3 font-body text-sm text-bone">
+    <label
+      className={`flex min-h-11 cursor-pointer gap-3 font-body text-sm text-bone ${
+        hint ? "items-start py-1" : "items-center"
+      }`}
+    >
       <input
         type="checkbox"
         checked={checked}
         onChange={onChange}
-        className="size-4 shrink-0 accent-[var(--color-accent)]"
+        className={`size-4 shrink-0 accent-[var(--color-accent)] ${hint ? "mt-1" : ""}`}
       />
-      {children}
+      <span>
+        {children}
+        {hint && <span className="block text-xs text-bone-muted">{hint}</span>}
+      </span>
     </label>
+  );
+}
+
+/** What the selected license lets the client do — the same lists the clause prints. */
+function UsageSummary({ usage }: { usage: ContractAnswers["usage"] }) {
+  const option = USAGE_RIGHTS.find((o) => o.id === usage) ?? USAGE_RIGHTS[0];
+  return (
+    <div
+      className="grid gap-4 rounded border border-border bg-surface p-4 font-body text-sm sm:grid-cols-2"
+      aria-live="polite"
+    >
+      <p className="text-bone-muted sm:col-span-2">{option.ownership}</p>
+      <div>
+        <p className="text-xs uppercase tracking-widest text-success">Client can</p>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-bone">
+          {option.clientMay.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </div>
+      {option.clientMayNot.length > 0 && (
+        <div>
+          <p className="text-xs uppercase tracking-widest text-danger">Not without a separate license</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-bone">
+            {option.clientMayNot.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 
