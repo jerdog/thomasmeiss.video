@@ -21,6 +21,7 @@ import {
   StatusBadge,
   emailFailureHint,
   todayLocal,
+  useFocusOnMount,
 } from "./ui";
 
 export function ContractDetail({
@@ -43,6 +44,7 @@ export function ContractDetail({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const headingRef = useFocusOnMount<HTMLHeadingElement>(contract !== null);
 
   const load = useCallback(async () => {
     try {
@@ -103,7 +105,7 @@ export function ContractDetail({
       <BackButton onClick={onBack}>Contracts</BackButton>
 
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="font-display text-2xl text-bone">{contract.title}</h2>
+        <h2 ref={headingRef} tabIndex={-1} className="outline-none font-display text-2xl text-bone">{contract.title}</h2>
         <StatusBadge status={status} />
       </div>
 
@@ -143,9 +145,11 @@ export function ContractDetail({
         {status === "sent" && (
           <Button
             disabled={busy}
-            onClick={() =>
-              void run(() => contractAction(contract.id, "send"), "Signing link re-sent.")
-            }
+            onClick={() => {
+              if (window.confirm(`Email ${answers.client.email} the signing link again?`)) {
+                void run(() => contractAction(contract.id, "send"), "Signing link re-sent.");
+              }
+            }}
           >
             Resend link
           </Button>

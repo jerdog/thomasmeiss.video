@@ -17,7 +17,7 @@ export function ContractPaper({
 }) {
   return (
     <article
-      className="print-doc mx-auto max-w-3xl bg-[#fbfaf7] px-6 py-10 font-body text-[15px] leading-relaxed text-neutral-900 shadow-lg ring-1 ring-black/10 sm:px-12"
+      className="print-doc contract-paper mx-auto max-w-3xl bg-[#fbfaf7] px-6 py-10 font-body text-[15px] leading-relaxed text-neutral-900 shadow-lg ring-1 ring-black/10 sm:px-12"
       aria-label={doc.title}
     >
       {preview && (
@@ -28,26 +28,30 @@ export function ContractPaper({
       <h2 className="font-display text-3xl text-neutral-950">{doc.title}</h2>
       <p className="mt-4">{doc.intro}</p>
 
-      {doc.sections.map((section) => (
-        <section key={section.heading} className="mt-6">
-          <h3 className="font-display text-xl text-neutral-950">{section.heading}</h3>
-          {section.blocks.map((block, i) =>
-            block.kind === "p" ? (
-              <p key={i} className="mt-2 whitespace-pre-line">
-                {block.text}
-              </p>
-            ) : (
-              <ul key={i} className="mt-2 list-disc space-y-1 pl-6">
-                {block.items.map((item) => (
-                  <li key={item}>{item}</li>
-                ))}
-              </ul>
-            ),
-          )}
-        </section>
-      ))}
+      {/* Two columns in print, so a contract fits on one page (see index.css). */}
+      <div className="contract-body">
+        {doc.sections.map((section) => (
+          <section key={section.heading} className="mt-5">
+            <h3 className="font-display text-lg text-neutral-950">{section.heading}</h3>
+            {section.blocks.map((block, i) =>
+              block.kind === "p" ? (
+                <p key={i} className="mt-1.5 whitespace-pre-line">
+                  {block.text}
+                </p>
+              ) : (
+                // Lists only appear in contracts frozen before the compact wording.
+                <ul key={i} className="mt-1.5 list-disc space-y-1 pl-6">
+                  {block.items.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              ),
+            )}
+          </section>
+        ))}
+      </div>
 
-      <section className="mt-10 grid gap-8 border-t border-neutral-300 pt-6 sm:grid-cols-2">
+      <section className="contract-signatures mt-8 grid gap-8 border-t border-neutral-300 pt-6 sm:grid-cols-2">
         <div>
           <p className="text-xs uppercase tracking-widest text-neutral-600">Producer</p>
           <p className="mt-2 font-display text-lg">{doc.providerName}</p>

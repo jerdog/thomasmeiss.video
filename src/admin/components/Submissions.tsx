@@ -201,9 +201,9 @@ export function Submissions({
                             href={`mailto:${submission.email}?subject=${encodeURIComponent(
                               `Re: ${submission.project_type} inquiry`,
                             )}`}
-                            className="link-underline text-accent-light"
+                            className="inline-flex min-h-11 items-center text-accent-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                           >
-                            {submission.email}
+                            <span className="link-underline">{submission.email}</span>
                           </a>
                         </dd>
                       </div>

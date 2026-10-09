@@ -47,7 +47,6 @@ export default function AdminApp() {
   }, []);
 
   useEffect(() => {
-    document.title = "Dashboard — Thomas Meiss Video";
     getSession()
       .then((session) => setEmail(session.email))
       .catch((err) => {
@@ -58,6 +57,9 @@ export default function AdminApp() {
 
   useEffect(() => {
     window.location.hash = tab === "analytics" ? "" : `#${tab}`;
+    // WCAG 2.4.2: the tab title says which section is open.
+    const label = TABS.find((item) => item.id === tab)?.label ?? "Dashboard";
+    document.title = `${label} · Dashboard — Thomas Meiss Video`;
   }, [tab]);
 
   if (expired) {
@@ -115,15 +117,18 @@ export default function AdminApp() {
                 saveTheme(next);
                 setTheme(next);
               }}
-              className="link-underline min-h-11 hover:text-bone focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="inline-flex min-h-11 items-center hover:text-bone focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
-              {theme === "light" ? "Dark mode" : "Light mode"}
+              <span className="link-underline">{theme === "light" ? "Dark mode" : "Light mode"}</span>
             </button>
-            <a href="/" className="link-underline hover:text-bone">
-              View site
+            <a href="/" className="inline-flex min-h-11 items-center hover:text-bone focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+              <span className="link-underline">View site</span>
             </a>
-            <a href="/cdn-cgi/access/logout" className="link-underline hover:text-bone">
-              Sign out
+            <a
+              href="/cdn-cgi/access/logout"
+              className="inline-flex min-h-11 items-center hover:text-bone focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <span className="link-underline">Sign out</span>
             </a>
           </div>
         </div>

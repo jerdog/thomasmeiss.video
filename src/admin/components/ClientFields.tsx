@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import type { ContractClient } from "../../../shared/contract";
 import { getClients, UnauthorizedError } from "../api";
-import { inputClass, labelClass } from "./ui";
+import { FieldError, inputClass, invalidClass, labelClass } from "./ui";
 
 type ClientOption = Awaited<ReturnType<typeof getClients>>["items"][number];
 
@@ -14,12 +14,18 @@ export function ClientFields({
   value,
   onChange,
   onUnauthorized,
+  idPrefix,
+  errors = {},
 }: {
   value: ContractClient;
   onChange: (client: ContractClient) => void;
   onUnauthorized: () => void;
+  /** Field ids are `${idPrefix}-name`, `${idPrefix}-email`, … so a form can focus them. */
+  idPrefix?: string;
+  errors?: { name?: string; email?: string };
 }) {
-  const id = useId();
+  const generated = useId();
+  const id = idPrefix ?? generated;
   const [clients, setClients] = useState<ClientOption[]>([]);
 
   useEffect(() => {
@@ -74,13 +80,34 @@ export function ClientFields({
           <label htmlFor={`${id}-name`} className={labelClass}>
             Name
           </label>
-          <input id={`${id}-name`} className={inputClass} value={value.name} onChange={set("name")} required autoComplete="off" />
+          <input
+            id={`${id}-name`}
+            className={`${inputClass} ${errors.name ? invalidClass : ""}`}
+            value={value.name}
+            onChange={set("name")}
+            required
+            aria-invalid={errors.name ? true : undefined}
+            aria-describedby={errors.name ? `${id}-name-error` : undefined}
+            autoComplete="off"
+          />
+          <FieldError id={`${id}-name-error`} message={errors.name} />
         </div>
         <div>
           <label htmlFor={`${id}-email`} className={labelClass}>
             Email
           </label>
-          <input id={`${id}-email`} type="email" className={inputClass} value={value.email} onChange={set("email")} required autoComplete="off" />
+          <input
+            id={`${id}-email`}
+            type="email"
+            className={`${inputClass} ${errors.email ? invalidClass : ""}`}
+            value={value.email}
+            onChange={set("email")}
+            required
+            aria-invalid={errors.email ? true : undefined}
+            aria-describedby={errors.email ? `${id}-email-error` : undefined}
+            autoComplete="off"
+          />
+          <FieldError id={`${id}-email-error`} message={errors.email} />
         </div>
         <div>
           <label htmlFor={`${id}-company`} className={labelClass}>

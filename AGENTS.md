@@ -194,6 +194,17 @@ renders the admin preview and the Worker's copy, so they cannot drift. Rules:
   ever expose `rendered` for its one contract — never `answers`, never a draft —
   and signing is a one-shot `status = 'sent'` guarded update.
 - `/sign` and `/api/sign` stay outside the Access application.
+- Usage-rights wording lives in `USAGE_RIGHTS` (ownership + "client may" /
+  "may not" lists). The clause and the questionnaire's summary panel both
+  render from it — edit there, never in one place only.
+- **Printed contracts fit one US Letter page** at 0.5in margins: print CSS in
+  `index.css` sets 9.5pt EB Garamond in two columns with run-in headings and
+  inline lists (same words, denser layout). A worst-case contract measures
+  ~875 of 960px. Adding clause text eats that headroom — re-check the page
+  count when you do.
+- Printing works by `display: none` on everything that is not, and does not
+  contain, `.print-doc`. Don't go back to `visibility: hidden` + absolute
+  positioning: Chromium then stops balancing the columns.
 - Money is integer cents everywhere; invoice totals come from `invoiceTotals`.
 - A failed first send leaves the document a draft, so "sent" always means the
   client got it. Emailing arbitrary clients needs the domain onboarded for
@@ -227,6 +238,25 @@ no-storage rule is about visitors). The public site and `/sign` never set the
 attribute. Use tokens, not palette classes, in admin code: status colours are
 `success` / `warning` / `danger` (e.g. `text-danger`, `bg-success/15`), so they
 work in both themes.
+
+**Accessibility (WCAG 2.2 AA).** The dashboard was audited with axe-core
+(0 violations, every view, both themes) plus manual checks for what axe can't
+see. Keep these conventions in admin code:
+
+- Every target `min-h-11` (44px) — buttons, links, inputs (`inputClass` has
+  it), summaries. Header-style text links wrap the label in a
+  `<span className="link-underline">` so the underline stays on the text.
+- When a view replaces another (list → detail → form → back), focus its `h2`
+  (`useFocusOnMount`, or the list's previous-mode effect). Never leave focus
+  on a button that just unmounted.
+- Form errors are per field: `aria-invalid`, `aria-describedby` →
+  `<FieldError>`, and focus moves to the first invalid field on submit. An
+  unparseable amount is an error, never a silent $0.
+- Anything that emails a client asks to confirm first, resends included
+  (SC 3.3.4).
+- A scrollable region that holds no focusable content gets `tabIndex={0}` and
+  a labelled `role="region"`.
+- `document.title` names the open section (SC 2.4.2).
 
 **Charts** (`src/admin/components/`) are hand-rolled inline SVG — no chart
 library. Series colours are `--color-chart-views` / `--color-chart-visitors`,

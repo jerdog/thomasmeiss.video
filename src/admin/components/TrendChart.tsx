@@ -348,7 +348,7 @@ export function TrendChart({
       </div>
 
       <details className="mt-4">
-        <summary className="cursor-pointer font-body text-xs text-bone-muted hover:text-bone">
+        <summary className="cursor-pointer py-3.5 font-body text-xs text-bone-muted hover:text-bone focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
           View as table
         </summary>
         <div className="mt-3 max-h-64 overflow-auto">
